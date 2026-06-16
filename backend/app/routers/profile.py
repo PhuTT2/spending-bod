@@ -12,7 +12,7 @@ from ..models import FinancialProfile, ProfileComputed, ProfileView, UserState
 router = APIRouter(prefix="/api/profile", tags=["profile"])
 
 
-def _build_view(state: UserState) -> ProfileView:
+def build_view(state: UserState) -> ProfileView:
     rules = get_rules()
     health_score, health_label, health_description = compute_health(state.profile, state.history, rules)
     computed = ProfileComputed(
@@ -21,18 +21,18 @@ def _build_view(state: UserState) -> ProfileView:
         health_label=health_label,
         health_description=health_description,
     )
-    return ProfileView(onboarding_completed=state.onboarding_completed, profile=state.profile, computed=computed)
+    return ProfileView(**state.model_dump(), computed=computed)
 
 
 @router.get("", response_model=ProfileView)
 def get_profile() -> ProfileView:
-    return _build_view(store.get_state())
+    return build_view(store.get_state())
 
 
 @router.put("", response_model=ProfileView)
 def put_profile(new_state: UserState) -> ProfileView:
     saved = store.save_state(new_state)
-    return _build_view(saved)
+    return build_view(saved)
 
 
 @router.post("/preview", response_model=ProfileComputed)

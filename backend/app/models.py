@@ -1,6 +1,7 @@
 """Pydantic contract shared by every router. This is the API the frontend
 (and, later, a GreenNode AgentBase agent) talks to — keep it explicit and
-typed instead of passing raw dicts around.
+typed instead of passing raw dicts around. Ordered so every model is defined
+before anything that references it (no forward-ref/model_rebuild juggling).
 """
 from __future__ import annotations
 
@@ -103,19 +104,24 @@ class FinancialProfile(BaseModel):
     updated_at: str = Field(default_factory=now_iso)
 
 
-class ProfileComputed(BaseModel):
-    """Derived fields the engine computes — never duplicated client-side."""
-
-    personality_label: str
-    health_score: int
-    health_label: str
-    health_description: str
+# ---------------------------------------------------------------------------
+# Narration primitives needed inside DecisionRecord (history)
+# ---------------------------------------------------------------------------
 
 
-class ProfileView(BaseModel):
-    onboarding_completed: bool
-    profile: FinancialProfile
-    computed: ProfileComputed
+class MemberVote(BaseModel):
+    member_id: str
+    member_name: str
+    vote: Literal["approve", "reject"]
+    reason: str
+
+
+class ActionPlanStep(BaseModel):
+    step: int
+    action: str
+    amount: Optional[float] = None
+    duration_month: Optional[int] = None
+    description: str = ""
 
 
 # ---------------------------------------------------------------------------
@@ -135,8 +141,8 @@ class DecisionRecord(BaseModel):
     new_score: int
     approved: bool
     summary: str
-    votes: list["MemberVote"] = []
-    action_plan: list["ActionPlanStep"] = []
+    votes: list[MemberVote] = []
+    action_plan: list[ActionPlanStep] = []
 
 
 class Challenge(BaseModel):
@@ -156,8 +162,8 @@ class Challenge(BaseModel):
 
 
 class UserState(BaseModel):
-    """The single document the frontend persists. Goal/challenge CRUD is plain
-    data editing (no scoring math involved) so it rides along here instead of
+    """The document actually persisted. Goal/challenge CRUD is plain data
+    editing (no scoring math involved) so it rides along here instead of
     needing its own resource — only proposal evaluation/decision math gets a
     dedicated engine endpoint."""
 
@@ -166,6 +172,24 @@ class UserState(BaseModel):
     history: list[DecisionRecord] = []
     challenges: list[Challenge] = []
     unlocked_badge_ids: list[str] = []
+
+
+class ProfileComputed(BaseModel):
+    """Derived fields the engine computes — never duplicated client-side."""
+
+    personality_label: str
+    health_score: int
+    health_label: str
+    health_description: str
+
+
+class ProfileView(UserState):
+    """Everything UserState stores, plus what the engine derives on read.
+    The one shape returned by every endpoint that hands back app state
+    (GET/PUT /api/profile, POST /api/proposals/resolve) — the frontend never
+    has to reconcile two slightly different state shapes."""
+
+    computed: ProfileComputed
 
 
 # ---------------------------------------------------------------------------
@@ -177,10 +201,9 @@ class ProposalInput(BaseModel):
     proposal_name: str = Field(min_length=1)
     amount: float = Field(gt=0)
     context: str = ""
-    # Explicit signals from the form. When present, the engine trusts them
-    # over its own regex guess instead of silently overriding the user.
+    # Explicit signal from the form. When present, the engine trusts it over
+    # its own regex guess instead of silently overriding the user.
     intent_hint: Optional[str] = None
-    timing: Optional[str] = None
 
 
 class ReasonBullet(BaseModel):
@@ -209,14 +232,6 @@ class FinancialImpact(BaseModel):
     estimated_months_to_afford: int
     estimated_monthly_payment: float
     remaining_emergency_fund: float
-
-
-class ActionPlanStep(BaseModel):
-    step: int
-    action: str
-    amount: Optional[float] = None
-    duration_month: Optional[int] = None
-    description: str = ""
 
 
 class GoalImpact(BaseModel):
@@ -275,13 +290,6 @@ class DebateStep(BaseModel):
     quote: str
 
 
-class MemberVote(BaseModel):
-    member_id: str
-    member_name: str
-    vote: Literal["approve", "reject"]
-    reason: str
-
-
 class BoardConclusion(BaseModel):
     approved: bool
     summary: str
@@ -314,6 +322,3 @@ class ResolveDecisionInput(BaseModel):
     evaluation: EvaluationResult
     narration: NarrationResult
     user_action: UserAction
-
-
-DecisionRecord.model_rebuild()
