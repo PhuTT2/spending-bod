@@ -57,13 +57,13 @@ export interface ProfileComputed {
   health_description: string;
 }
 
-export interface ProfileView {
-  onboarding_completed: boolean;
-  profile: FinancialProfile;
+export interface ProfileView extends UserState {
   computed: ProfileComputed;
 }
 
 // --- History / gamification -------------------------------------------
+
+export type UserAction = "obeyed" | "defied";
 
 export interface MemberVote {
   member_id: string;

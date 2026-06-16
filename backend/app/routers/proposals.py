@@ -18,12 +18,13 @@ from ..models import (
     DebateResponse,
     DecisionRecord,
     EvaluationResult,
+    ProfileView,
     ProposalInput,
     ResolveDecisionInput,
-    UserState,
     now_iso,
 )
 from ..narration import get_provider
+from .profile import build_view
 
 router = APIRouter(prefix="/api/proposals", tags=["proposals"])
 
@@ -59,8 +60,8 @@ async def debate_proposal(proposal: ProposalInput) -> DebateResponse:
     return DebateResponse(narration=narration, evaluation=evaluation)
 
 
-@router.post("/resolve", response_model=UserState)
-def resolve_proposal(payload: ResolveDecisionInput) -> UserState:
+@router.post("/resolve", response_model=ProfileView)
+def resolve_proposal(payload: ResolveDecisionInput) -> ProfileView:
     state = store.get_state()
     score_change, new_score, new_cash_balance, _spent = resolve_user_decision(
         payload.evaluation,
@@ -88,4 +89,5 @@ def resolve_proposal(payload: ResolveDecisionInput) -> UserState:
 
     updated_profile = state.profile.model_copy(update={"discipline_score": new_score, "cash_balance": new_cash_balance})
     new_state = state.model_copy(update={"profile": updated_profile, "history": [record, *state.history]})
-    return store.save_state(new_state)
+    saved = store.save_state(new_state)
+    return build_view(saved)

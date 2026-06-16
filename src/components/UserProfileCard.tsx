@@ -1,353 +1,163 @@
 import React, { useState } from "react";
-import { UserFinancialState, FinancialProfile } from "../types";
-import { User, ShieldCheck, Heart, Edit3, Save, CheckCircle, HelpCircle } from "lucide-react";
+import { FinancialProfile, ProfileComputed } from "../types";
+import { User, Save } from "lucide-react";
 
 interface UserProfileCardProps {
-  userState: UserFinancialState;
-  onSave: (updatedState: {
-    income: number;
-    savings: number;
-    investments: number;
-    financialProfile: FinancialProfile;
-  }) => void;
+  profile: FinancialProfile;
+  computed: ProfileComputed;
+  onSave: (profile: FinancialProfile) => void;
 }
 
-export default function UserProfileCard({ userState, onSave }: UserProfileCardProps) {
+export default function UserProfileCard({ profile, computed, onSave }: UserProfileCardProps) {
   const [isEditing, setIsEditing] = useState(false);
 
-  // Profile metadata
-  const [username, setUsername] = useState(userState.financialProfile?.username || "CEO");
-  const [income, setIncome] = useState(userState.income.toString());
-  const [savingsAmt, setSavingsAmt] = useState(userState.savings.toString());
-  const [investmentsAmt, setInvestmentsAmt] = useState((userState.investments ?? 0).toString());
+  const [displayName, setDisplayName] = useState(profile.display_name);
+  const [income, setIncome] = useState(profile.monthly_income.toString());
+  const [cashBalance, setCashBalance] = useState(profile.cash_balance.toString());
+  const [investments, setInvestments] = useState(profile.investments_balance.toString());
 
-  // Product Holdings
-  const [hasBnpl, setHasBnpl] = useState(userState.financialProfile?.product_holdings?.bnpl.has ?? false);
-  const [limitBnpl, setLimitBnpl] = useState((userState.financialProfile?.product_holdings?.bnpl.limit ?? 5000000).toString());
+  const [hasBnpl, setHasBnpl] = useState(profile.product_holdings.bnpl.has);
+  const [limitBnpl, setLimitBnpl] = useState(profile.product_holdings.bnpl.limit.toString());
+  const [hasSavings, setHasSavings] = useState(profile.product_holdings.savings.has);
+  const [balanceSavings, setBalanceSavings] = useState(profile.product_holdings.savings.balance.toString());
+  const [hasSecurities, setHasSecurities] = useState(profile.product_holdings.securities.has);
+  const [hasLifeIns, setHasLifeIns] = useState(profile.product_holdings.life_insurance.has);
 
-  const [hasSavings, setHasSavings] = useState(userState.financialProfile?.product_holdings?.savings.has ?? false);
-  const [balanceSavings, setBalanceSavings] = useState((userState.financialProfile?.product_holdings?.savings.balance ?? 15000000).toString());
-
-  const [hasSecurities, setHasSecurities] = useState(userState.financialProfile?.product_holdings?.securities.has ?? false);
-  const [balanceSecurities, setBalanceSecurities] = useState((userState.financialProfile?.product_holdings?.securities.balance ?? 12000000).toString());
-
-  const [hasLifeIns, setHasLifeIns] = useState(userState.financialProfile?.product_holdings?.life_insurance.has ?? false);
-  const [premiumLifeIns, setPremiumLifeIns] = useState((userState.financialProfile?.product_holdings?.life_insurance.premium ?? 8000000).toString());
-
-  const [hasNonLifeIns, setHasNonLifeIns] = useState(userState.financialProfile?.product_holdings?.non_life_insurance.has ?? false);
-  const [nameNonLifeIns, setNameNonLifeIns] = useState(userState.financialProfile?.product_holdings?.non_life_insurance.name || "Bảo hiểm Sức Khỏe ZaloPay");
-
-  // Lifestyle Preferences
-  const [travelPref, setTravelPref] = useState(userState.financialProfile?.lifestyle_preference?.travel ?? 3);
-  const [shoppingPref, setShoppingPref] = useState(userState.financialProfile?.lifestyle_preference?.shopping ?? 3);
-  const [entertainmentPref, setEntertainmentPref] = useState(userState.financialProfile?.lifestyle_preference?.entertainment ?? 3);
-  const [savingPref, setSavingPref] = useState(userState.financialProfile?.lifestyle_preference?.saving ?? 3);
-  const [investingPref, setInvestingPref] = useState(userState.financialProfile?.lifestyle_preference?.investing ?? 3);
-  const [safetyPref, setSafetyPref] = useState(userState.financialProfile?.lifestyle_preference?.safety ?? 3);
-
-  const getPersonalityLabel = () => {
-    const prefs = [
-      { name: "Chiến Thần Xê Dịch ✈️", score: travelPref },
-      { name: "Hán Tử Mua Sắm 🛍️", score: shoppingPref },
-      { name: "Đại Sứ Hưởng Thụ Giải Trí 🍿", score: entertainmentPref },
-      { name: "Sứ Giả Tích Lũy Thép 🐷", score: savingPref },
-      { name: "Cá Mập Đu Đỉnh Đầu Tư 📈", score: investingPref },
-      { name: "Thánh An Toàn Phòng Thủ 🛡️", score: safetyPref }
-    ];
-    
-    let best = prefs[0];
-    for (const p of prefs) {
-      if (p.score > best.score) {
-        best = p;
-      }
-    }
-    
-    if (best.score === 3 && travelPref === 3 && shoppingPref === 3 && entertainmentPref === 3 && savingPref === 3 && investingPref === 3 && safetyPref === 3) {
-      return "CEO Cân Bằng Trí Tuệ 🧠";
-    }
-    
-    return best.name;
-  };
+  const [prefs, setPrefs] = useState(profile.lifestyle_preference);
 
   const handleSaveClick = () => {
-    const inc = Math.max(0, parseFloat(income) || 0);
-    const sav = Math.max(0, parseFloat(savingsAmt) || 0);
-    const inv = Math.max(0, parseFloat(investmentsAmt) || 0);
-
-    const lifestyle_preference = {
-      travel: travelPref,
-      shopping: shoppingPref,
-      entertainment: entertainmentPref,
-      saving: savingPref,
-      investing: investingPref,
-      safety: safetyPref
-    };
-
-    const financialProfile: FinancialProfile = {
-      profile_id: userState.financialProfile?.profile_id || "prof_v1_xyz",
-      user_id: username.trim() || "CEO",
-      version: (userState.financialProfile?.version || 1) + 1,
-      username: username.trim() || "CEO",
-      monthly_income: inc,
-      monthly_fixed_expenses: inc * 0.3,
-      cash_balance: sav + inv,
-      emergency_fund: sav,
-      risk_tolerance: userState.financialProfile?.risk_tolerance || "medium",
-      lifestyle_preference,
-      financial_personality: getPersonalityLabel(),
-      product_holdings: {
-        bnpl: { has: hasBnpl, limit: hasBnpl ? (parseFloat(limitBnpl) || 0) : 0, provider: hasBnpl ? "ZaloPay PayLater" : null },
-        savings: { has: hasSavings, balance: hasSavings ? (parseFloat(balanceSavings) || 0) : 0 },
-        securities: { has: hasSecurities, balance: hasSecurities ? (parseFloat(balanceSecurities) || 0) : 0 },
-        life_insurance: { has: hasLifeIns, premium: hasLifeIns ? (parseFloat(premiumLifeIns) || 0) : 0 },
-        non_life_insurance: { has: hasNonLifeIns, name: hasNonLifeIns ? nameNonLifeIns : null }
-      },
-      active_goals: userState.financialProfile?.active_goals || [],
-      discipline_score: userState.disciplineScore,
-      created_at: userState.financialProfile?.created_at || new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-
     onSave({
-      income: inc,
-      savings: sav,
-      investments: inv,
-      financialProfile,
+      ...profile,
+      display_name: displayName.trim() || "Sếp Tổng",
+      monthly_income: Math.max(0, parseFloat(income) || 0),
+      cash_balance: Math.max(0, parseFloat(cashBalance) || 0),
+      investments_balance: Math.max(0, parseFloat(investments) || 0),
+      lifestyle_preference: prefs,
+      product_holdings: {
+        ...profile.product_holdings,
+        bnpl: { has: hasBnpl, limit: hasBnpl ? parseFloat(limitBnpl) || 0 : 0, provider: hasBnpl ? "ZaloPay PayLater" : null },
+        savings: { has: hasSavings, balance: hasSavings ? parseFloat(balanceSavings) || 0 : 0 },
+        securities: { has: hasSecurities, balance: profile.product_holdings.securities.balance },
+        life_insurance: { has: hasLifeIns, premium: profile.product_holdings.life_insurance.premium },
+      },
     });
     setIsEditing(false);
   };
 
+  const prefRows: { label: string; key: keyof typeof prefs }[] = [
+    { label: "✈️ Du lịch", key: "travel" },
+    { label: "🛍️ Mua sắm", key: "shopping" },
+    { label: "🍿 Giải trí", key: "entertainment" },
+    { label: "🐷 Tiết kiệm", key: "saving" },
+    { label: "📈 Đầu tư", key: "investing" },
+    { label: "🛡️ An toàn", key: "safety" },
+  ];
+
   return (
-    <div className="bg-white rounded-3xl border-4 border-black p-5 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] text-black" id="user-profile-card">
+    <div className="bg-white rounded-3xl border-4 border-black p-5 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] text-black">
       <div className="flex items-center justify-between border-b-2 border-black pb-2 mb-4">
-        <h3 className="font-black uppercase text-sm flex items-center gap-2">
-          <User className="w-4.5 h-4.5 text-indigo-600 animate-pulse" /> 📁 HỒ SƠ TÀI CHÍNH CEO
-        </h3>
-        <button
-          onClick={() => setIsEditing(!isEditing)}
-          className="text-xs bg-slate-100 hover:bg-yellow-300 border-2 border-black font-black uppercase px-2.5 py-1 rounded-xl shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all cursor-pointer"
-        >
-          {isEditing ? "HỦY" : "CHỈNH SỬA"}
+        <h3 className="font-black uppercase text-sm flex items-center gap-2"><User className="w-4.5 h-4.5 text-indigo-600" /> Hồ sơ</h3>
+        <button onClick={() => setIsEditing(!isEditing)} className="text-xs bg-slate-100 hover:bg-yellow-300 border-2 border-black font-black uppercase px-2.5 py-1 rounded-xl cursor-pointer">
+          {isEditing ? "Hủy" : "Sửa"}
         </button>
       </div>
 
       {!isEditing ? (
         <div className="space-y-3.5">
-          {/* Default view */}
           <div className="flex justify-between items-center bg-indigo-50 border-2 border-black p-3 rounded-2xl">
             <div>
-              <span className="text-[10px] font-black tracking-widest text-indigo-700 block uppercase leading-none">NHÂN CÁCH</span>
-              <strong className="text-sm font-black text-slate-800 uppercase block mt-1">
-                {userState.financialProfile?.financial_personality || "CEO ĐÚNG ĐẮN"}
-              </strong>
+              <span className="text-[10px] font-black tracking-widest text-indigo-700 block uppercase">Nhân cách</span>
+              <strong className="text-sm font-black text-slate-800 uppercase block mt-1">{computed.personality_label}</strong>
             </div>
             <span className="text-3xl">👤</span>
           </div>
 
           <div className="space-y-1">
-            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">CEO DANH XƯNG</span>
-            <span className="font-bold text-sm text-black">{userState.financialProfile?.username || "Chưa thiết lập"}</span>
+            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest block">Tên</span>
+            <span className="font-bold text-sm text-black">{profile.display_name}</span>
           </div>
 
-          {/* Holdings summary list */}
           <div className="pt-2 border-t border-gray-100 space-y-2">
-            <span className="text-[10px] font-black text-indigo-600 block uppercase tracking-wider">SẢN PHẨM ZALOPAY ĐANG SỞ HỮU</span>
-            
+            <span className="text-[10px] font-black text-indigo-600 block uppercase">Sản phẩm đang dùng</span>
             <div className="grid grid-cols-2 gap-2 text-[11px] font-bold">
-              <div className={`p-2 rounded-xl border border-black flex items-center justify-between ${userState.financialProfile?.product_holdings?.bnpl.has ? "bg-emerald-50 text-emerald-990" : "bg-gray-50 text-gray-400 opacity-60"}`}>
-                <span>HẠN MỨC BNPL CRÉDIT</span>
-                <span>{userState.financialProfile?.product_holdings?.bnpl.has ? "✔️" : "❌"}</span>
+              <div className={`p-2 rounded-xl border border-black flex items-center justify-between ${profile.product_holdings.bnpl.has ? "bg-emerald-50" : "bg-gray-50 text-gray-400 opacity-60"}`}>
+                <span>BNPL</span><span>{profile.product_holdings.bnpl.has ? "✔️" : "❌"}</span>
               </div>
-              <div className={`p-2 rounded-xl border border-black flex items-center justify-between ${userState.financialProfile?.product_holdings?.savings.has ? "bg-emerald-50 text-emerald-990" : "bg-gray-50 text-gray-400 opacity-60"}`}>
-                <span>TIẾT KIỆM TÍCH LŨY</span>
-                <span>{userState.financialProfile?.product_holdings?.savings.has ? "✔️" : "❌"}</span>
+              <div className={`p-2 rounded-xl border border-black flex items-center justify-between ${profile.product_holdings.savings.has ? "bg-emerald-50" : "bg-gray-50 text-gray-400 opacity-60"}`}>
+                <span>Tiết kiệm</span><span>{profile.product_holdings.savings.has ? "✔️" : "❌"}</span>
               </div>
-              <div className={`p-2 rounded-xl border border-black flex items-center justify-between ${userState.financialProfile?.product_holdings?.securities.has ? "bg-emerald-50 text-emerald-990" : "bg-gray-50 text-gray-400 opacity-60"}`}>
-                <span>ĐẦU TƯ CHỨNG KHOÁN</span>
-                <span>{userState.financialProfile?.product_holdings?.securities.has ? "✔️" : "❌"}</span>
+              <div className={`p-2 rounded-xl border border-black flex items-center justify-between ${profile.product_holdings.securities.has ? "bg-emerald-50" : "bg-gray-50 text-gray-400 opacity-60"}`}>
+                <span>Chứng khoán</span><span>{profile.product_holdings.securities.has ? "✔️" : "❌"}</span>
               </div>
-              <div className={`p-2 rounded-xl border border-black flex items-center justify-between ${(userState.financialProfile?.product_holdings?.life_insurance.has || userState.financialProfile?.product_holdings?.non_life_insurance.has) ? "bg-emerald-50 text-emerald-990" : "bg-gray-50 text-gray-400 opacity-60"}`}>
-                <span>BẢO HIỂM AN TÂM</span>
-                <span>{(userState.financialProfile?.product_holdings?.life_insurance.has || userState.financialProfile?.product_holdings?.non_life_insurance.has) ? "✔️" : "❌"}</span>
+              <div className={`p-2 rounded-xl border border-black flex items-center justify-between ${(profile.product_holdings.life_insurance.has || profile.product_holdings.non_life_insurance.has) ? "bg-emerald-50" : "bg-gray-50 text-gray-400 opacity-60"}`}>
+                <span>Bảo hiểm</span><span>{(profile.product_holdings.life_insurance.has || profile.product_holdings.non_life_insurance.has) ? "✔️" : "❌"}</span>
               </div>
             </div>
           </div>
 
-          {/* Preferences display */}
           <div className="pt-2 border-t border-gray-100 space-y-1.5">
-            <span className="text-[10px] font-black text-indigo-600 block uppercase tracking-wider">Mức độ ưu tiên lối sống</span>
+            <span className="text-[10px] font-black text-indigo-600 block uppercase">Gu sống</span>
             <div className="space-y-1 text-xs font-bold text-gray-700">
-              <div className="flex justify-between">
-                <span>✈️ Du lịch (Travel)</span>
-                <span>{"⭐".repeat(userState.financialProfile?.lifestyle_preference.travel || 3)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>🛍️ Mua sắm (Shopping)</span>
-                <span>{"⭐".repeat(userState.financialProfile?.lifestyle_preference.shopping || 3)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>🍿 Giải trí (Entertainment)</span>
-                <span>{"⭐".repeat(userState.financialProfile?.lifestyle_preference.entertainment || 3)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>🐷 Tiết kiệm (Saving)</span>
-                <span>{"⭐".repeat(userState.financialProfile?.lifestyle_preference.saving || 3)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>📈 Đầu tư (Investing)</span>
-                <span>{"⭐".repeat(userState.financialProfile?.lifestyle_preference.investing || 3)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>🛡️ An tâm (Safety)</span>
-                <span>{"⭐".repeat(userState.financialProfile?.lifestyle_preference.safety || 3)}</span>
-              </div>
+              {prefRows.map((row) => (
+                <div key={row.key} className="flex justify-between">
+                  <span>{row.label}</span>
+                  <span>{"⭐".repeat(profile.lifestyle_preference[row.key])}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
       ) : (
         <div className="space-y-4 max-h-[500px] overflow-y-auto pr-1">
-          {/* Editorial / Editing view */}
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black uppercase text-gray-600 block">Tên hiển thị (username)</label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-3 py-1.5 bg-slate-50 border-2 border-black rounded-xl text-xs font-black"
-            />
+            <label className="text-[10px] font-black uppercase text-gray-600 block">Tên</label>
+            <input type="text" value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="w-full px-3 py-1.5 bg-slate-50 border-2 border-black rounded-xl text-xs font-black" />
           </div>
-
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black uppercase text-gray-600 block">Thu nhập mỗi tháng (Income)</label>
-            <input
-              type="number"
-              value={income}
-              onChange={(e) => setIncome(e.target.value)}
-              className="w-full px-3 py-1.5 bg-slate-50 border-2 border-black rounded-xl font-mono text-xs font-black"
-            />
+            <label className="text-[10px] font-black uppercase text-gray-600 block">Thu nhập/tháng</label>
+            <input type="number" value={income} onChange={(e) => setIncome(e.target.value)} className="w-full px-3 py-1.5 bg-slate-50 border-2 border-black rounded-xl font-mono text-xs font-black" />
           </div>
-
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black uppercase text-gray-600 block">Tiết kiệm hiện hữu (Savings)</label>
-            <input
-              type="number"
-              value={savingsAmt}
-              onChange={(e) => setSavingsAmt(e.target.value)}
-              className="w-full px-3 py-1.5 bg-slate-50 border-2 border-black rounded-xl font-mono text-xs font-black"
-            />
+            <label className="text-[10px] font-black uppercase text-gray-600 block">Tiết kiệm hiện có</label>
+            <input type="number" value={cashBalance} onChange={(e) => setCashBalance(e.target.value)} className="w-full px-3 py-1.5 bg-slate-50 border-2 border-black rounded-xl font-mono text-xs font-black" />
           </div>
-
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black uppercase text-gray-600 block">Chứng khoán đã mua (Investments)</label>
-            <input
-              type="number"
-              value={investmentsAmt}
-              onChange={(e) => setInvestmentsAmt(e.target.value)}
-              className="w-full px-3 py-1.5 bg-slate-50 border-2 border-black rounded-xl font-mono text-xs font-black"
-            />
-          </div>
-
-          <div className="space-y-3.5 pt-2 border-t border-gray-105 border-t-2 border-black">
-            <span className="text-[10px] font-black text-indigo-700 block uppercase">Điều chỉnh Sản phẩm ZaloPay</span>
-            
-            <label className="flex items-center gap-2 font-black text-xs cursor-pointer">
-              <input type="checkbox" checked={hasBnpl} onChange={(e) => setHasBnpl(e.target.checked)} className="cursor-pointer" />
-              <span>Ví Trả Sau (BNPL) 💳</span>
-            </label>
-            {hasBnpl && (
-              <input type="number" value={limitBnpl} onChange={(e) => setLimitBnpl(e.target.value)} className="w-full px-3 py-1 bg-white border-2 border-black rounded-xl text-xs font-mono ml-5" />
-            )}
-
-            <label className="flex items-center gap-2 font-black text-xs cursor-pointer">
-              <input type="checkbox" checked={hasSavings} onChange={(e) => setHasSavings(e.target.checked)} className="cursor-pointer" />
-              <span>Gửi Tiết Kiệm Tích Lũy 🐷</span>
-            </label>
-            {hasSavings && (
-              <input type="number" value={balanceSavings} onChange={(e) => setBalanceSavings(e.target.value)} className="w-full px-3 py-1 bg-white border-2 border-black rounded-xl text-xs font-mono ml-5" />
-            )}
-
-            <label className="flex items-center gap-2 font-black text-xs cursor-pointer">
-              <input type="checkbox" checked={hasSecurities} onChange={(e) => setHasSecurities(e.target.checked)} className="cursor-pointer" />
-              <span>Tích Sản Chứng Khoán 📈</span>
-            </label>
-            {hasSecurities && (
-              <input type="number" value={balanceSecurities} onChange={(e) => setBalanceSecurities(e.target.value)} className="w-full px-3 py-1 bg-white border-2 border-black rounded-xl text-xs font-mono ml-5" />
-            )}
-
-            <label className="flex items-center gap-2 font-black text-xs cursor-pointer">
-              <input type="checkbox" checked={hasLifeIns} onChange={(e) => setHasLifeIns(e.target.checked)} className="cursor-pointer" />
-              <span>Bảo hiểm nhân thọ 🛡️</span>
-            </label>
-            {hasLifeIns && (
-              <input type="number" value={premiumLifeIns} onChange={(e) => setPremiumLifeIns(e.target.value)} className="w-full px-3 py-1 bg-white border-2 border-black rounded-xl text-xs font-mono ml-5" />
-            )}
-
-            <label className="flex items-center gap-2 font-black text-xs cursor-pointer">
-              <input type="checkbox" checked={hasNonLifeIns} onChange={(e) => setHasNonLifeIns(e.target.checked)} className="cursor-pointer" />
-              <span>Bảo hiểm phi nhân thọ 🏥</span>
-            </label>
-            {hasNonLifeIns && (
-              <input type="text" value={nameNonLifeIns} onChange={(e) => setNameNonLifeIns(e.target.value)} className="w-full px-3 py-1 bg-white border-2 border-black rounded-xl text-xs font-sans font-bold ml-5" />
-            )}
+            <label className="text-[10px] font-black uppercase text-gray-600 block">Đang đầu tư</label>
+            <input type="number" value={investments} onChange={(e) => setInvestments(e.target.value)} className="w-full px-3 py-1.5 bg-slate-50 border-2 border-black rounded-xl font-mono text-xs font-black" />
           </div>
 
           <div className="space-y-3 pt-2 border-t-2 border-black">
-            <span className="text-[10px] font-black text-indigo-700 block uppercase">Điều chỉnh ưu tiên lối sống (1 - 5)</span>
-            
-            <div className="flex flex-col gap-1">
-              <div className="flex justify-between text-[11px] font-bold uppercase text-gray-500">
-                <span>✈️ Xê dịch (Travel)</span>
-                <span>{travelPref}/5</span>
-              </div>
-              <input type="range" min="1" max="5" value={travelPref} onChange={(e) => setTravelPref(parseInt(e.target.value))} className="accent-indigo-600 h-1" />
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <div className="flex justify-between text-[11px] font-bold uppercase text-gray-500">
-                <span>🛍️ Mua sắm (Shopping)</span>
-                <span>{shoppingPref}/5</span>
-              </div>
-              <input type="range" min="1" max="5" value={shoppingPref} onChange={(e) => setShoppingPref(parseInt(e.target.value))} className="accent-indigo-600 h-1" />
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <div className="flex justify-between text-[11px] font-bold uppercase text-gray-500">
-                <span>🍿 Ăn chơi (Entertainment)</span>
-                <span>{entertainmentPref}/5</span>
-              </div>
-              <input type="range" min="1" max="5" value={entertainmentPref} onChange={(e) => setEntertainmentPref(parseInt(e.target.value))} className="accent-indigo-600 h-1" />
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <div className="flex justify-between text-[11px] font-bold uppercase text-gray-500">
-                <span>🐷 Tiết kiệm (Saving)</span>
-                <span>{savingPref}/5</span>
-              </div>
-              <input type="range" min="1" max="5" value={savingPref} onChange={(e) => setSavingPref(parseInt(e.target.value))} className="accent-indigo-600 h-1" />
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <div className="flex justify-between text-[11px] font-bold uppercase text-gray-500">
-                <span>📈 Đầu tư (Investing)</span>
-                <span>{investingPref}/5</span>
-              </div>
-              <input type="range" min="1" max="5" value={investingPref} onChange={(e) => setInvestingPref(parseInt(e.target.value))} className="accent-indigo-600 h-1" />
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <div className="flex justify-between text-[11px] font-bold uppercase text-gray-500">
-                <span>🛡️ Phòng thủ (Safety)</span>
-                <span>{safetyPref}/5</span>
-              </div>
-              <input type="range" min="1" max="5" value={safetyPref} onChange={(e) => setSafetyPref(parseInt(e.target.value))} className="accent-indigo-600 h-1" />
-            </div>
+            <span className="text-[10px] font-black text-indigo-700 block uppercase">Sản phẩm</span>
+            <label className="flex items-center gap-2 font-black text-xs cursor-pointer">
+              <input type="checkbox" checked={hasBnpl} onChange={(e) => setHasBnpl(e.target.checked)} /> <span>Ví trả sau 💳</span>
+            </label>
+            {hasBnpl && <input type="number" value={limitBnpl} onChange={(e) => setLimitBnpl(e.target.value)} className="w-full px-3 py-1 bg-white border-2 border-black rounded-xl text-xs font-mono ml-5" />}
+            <label className="flex items-center gap-2 font-black text-xs cursor-pointer">
+              <input type="checkbox" checked={hasSavings} onChange={(e) => setHasSavings(e.target.checked)} /> <span>Tiết kiệm tích lũy 🐷</span>
+            </label>
+            {hasSavings && <input type="number" value={balanceSavings} onChange={(e) => setBalanceSavings(e.target.value)} className="w-full px-3 py-1 bg-white border-2 border-black rounded-xl text-xs font-mono ml-5" />}
+            <label className="flex items-center gap-2 font-black text-xs cursor-pointer">
+              <input type="checkbox" checked={hasSecurities} onChange={(e) => setHasSecurities(e.target.checked)} /> <span>Chứng khoán 📈</span>
+            </label>
+            <label className="flex items-center gap-2 font-black text-xs cursor-pointer">
+              <input type="checkbox" checked={hasLifeIns} onChange={(e) => setHasLifeIns(e.target.checked)} /> <span>Bảo hiểm nhân thọ 🛡️</span>
+            </label>
           </div>
 
-          <button
-            onClick={handleSaveClick}
-            className="w-full mt-4 py-3 bg-emerald-600 hover:bg-yellow-300 text-white hover:text-black border-2 border-black rounded-xl font-black uppercase shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] active:translate-y-0.5 transition-all text-sm flex items-center justify-center gap-2 cursor-pointer"
-          >
-            <Save className="w-4 h-4" /> <span>LƯU CẬP NHẬT THỦ CÔNG</span>
+          <div className="space-y-3 pt-2 border-t-2 border-black">
+            <span className="text-[10px] font-black text-indigo-700 block uppercase">Gu sống (1-5)</span>
+            {prefRows.map((row) => (
+              <div key={row.key} className="flex flex-col gap-1">
+                <div className="flex justify-between text-[11px] font-bold uppercase text-gray-500">
+                  <span>{row.label}</span><span>{prefs[row.key]}/5</span>
+                </div>
+                <input type="range" min="1" max="5" value={prefs[row.key]} onChange={(e) => setPrefs({ ...prefs, [row.key]: parseInt(e.target.value) })} className="accent-indigo-600 h-1" />
+              </div>
+            ))}
+          </div>
+
+          <button onClick={handleSaveClick} className="w-full mt-4 py-3 bg-emerald-600 hover:bg-yellow-300 text-white hover:text-black border-2 border-black rounded-xl font-black uppercase shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-y-0.5 transition-all text-sm flex items-center justify-center gap-2 cursor-pointer">
+            <Save className="w-4 h-4" /> <span>Lưu</span>
           </button>
         </div>
       )}

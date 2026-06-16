@@ -284,6 +284,9 @@ def _generate_action_plan(
         months = rules.get("bnpl_installment_months", 3)
         plans.append(ActionPlanStep(step=1, action="use_bnpl", amount=amount, duration_month=months, description=f"Thanh toán bằng ví trả sau, chia làm {months} kỳ."))
         plans.append(ActionPlanStep(step=2, action="save_more", amount=amount / months, description="Thiết lập tiết kiệm tự động để trả đúng hạn mỗi kỳ."))
+    elif decision == "approve_with_conditions":
+        # e.g. low discipline + shopping override: affordable, but flagged for self-control.
+        plans.append(ActionPlanStep(step=1, action="purchase", amount=amount, description="Có thể mua, nhưng tự kiểm soát chặt hơn vì điểm kỷ luật đang thấp."))
     elif decision == "delay":
         if category == "travel":
             plans.append(ActionPlanStep(step=1, action="travel_fund_contribution", amount=int(amount / 3) + 1, duration_month=3, description="Gửi tiết kiệm mục tiêu du lịch mỗi tháng."))
