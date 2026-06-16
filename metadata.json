@@ -1,0 +1,6 @@
+{
+  "name": "Hỏi HĐQT Tài Chính",
+  "description": "Hội đồng quản trị tài chính ảo đưa ra các quyết định chi tiêu và đầu tư của bạn qua tranh luận, bỏ phiếu, và roast cực hài hước.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

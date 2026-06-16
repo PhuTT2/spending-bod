@@ -1,0 +1,9 @@
+{
+  "emergency_fund_months": 3,
+  "ideal_emergency_fund_months": 6,
+  "debt_warning_ratio": 0.35,
+  "debt_reject_ratio": 0.50,
+  "minimum_discipline_score_bnpl": 40,
+  "minimum_income_bnpl": 3000000,
+  "high_sanity_check_multiplier": 20
+}
