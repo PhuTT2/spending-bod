@@ -17,9 +17,14 @@ __all__ = ["NarrationProvider", "FallbackProvider", "get_provider"]
 def get_provider() -> NarrationProvider:
     if LLM_PROVIDER == "fallback":
         return FallbackProvider()
+    if LLM_PROVIDER == "openai":
+        try:
+            from .openai_provider import OpenAIProvider
+            return OpenAIProvider()
+        except Exception:
+            return FallbackProvider()
     try:
         from .gemini_provider import GeminiProvider
-
         return GeminiProvider()
     except Exception:
         return FallbackProvider()

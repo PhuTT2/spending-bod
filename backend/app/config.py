@@ -19,7 +19,10 @@ RULES_PATH = REPO_ROOT / "config" / "financial_rules.json"
 load_dotenv(REPO_ROOT / ".env")
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
-LLM_PROVIDER = os.getenv("LLM_PROVIDER", "").strip().lower()  # "fallback" forces the deterministic narrator
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "").strip().lower()  # "fallback" forces fallback; "openai" uses OpenAI-compatible
+LLM_BASE_URL = os.getenv("LLM_BASE_URL", "").strip()
+LLM_API_KEY = os.getenv("LLM_API_KEY", "").strip()
+LLM_MODEL = os.getenv("LLM_MODEL", "").strip()
 ENV = os.getenv("NODE_ENV", os.getenv("ENV", "development"))
 PORT = int(os.getenv("PORT", "8000" if ENV != "production" else "3000"))
 

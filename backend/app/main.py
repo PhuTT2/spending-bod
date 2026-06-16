@@ -27,6 +27,7 @@ app.include_router(profile.router)
 app.include_router(proposals.router)
 
 
+@app.get("/health")
 @app.get("/api/health")
 def health() -> dict:
     return {"status": "ok"}

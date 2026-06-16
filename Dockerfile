@@ -19,6 +19,6 @@ COPY config ./config
 COPY --from=frontend-builder /app/dist ./dist
 
 ENV NODE_ENV=production
-EXPOSE 3000
+EXPOSE 8080
 
-CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "3000", "--app-dir", "backend"]
+CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080", "--app-dir", "backend"]
