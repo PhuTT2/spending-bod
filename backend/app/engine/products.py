@@ -1,4 +1,4 @@
-"""ZaloPay product catalog + recommendation mapping.
+"""Zalopay product catalog + recommendation mapping.
 
 Ported 1:1 from productCatalog.ts, with one simplification: the old code
 always returned a 1-item array and the frontend only ever read index 0, so
@@ -13,7 +13,7 @@ _CATALOG: dict[str, ProductRecommendation] = {
     for p in [
         {
             "product_id": "bnpl",
-            "product_name": "Tài Khoản Trả Sau ZaloPay",
+            "product_name": "Tài Khoản Trả Sau Zalopay",
             "category": "credit",
             "why_this_product": "Hạn mức linh hoạt, chia nhỏ thanh toán.",
             "tradeoff_summary": "Không áp lực tài chính ngay lập tức, nhưng cần kỷ luật trả nợ đúng hạn.",
@@ -22,7 +22,7 @@ _CATALOG: dict[str, ProductRecommendation] = {
         },
         {
             "product_id": "savings_account",
-            "product_name": "Gửi Tiết Kiệm Tích Lũy ZaloPay",
+            "product_name": "Gửi Tiết Kiệm Tích Lũy Zalopay",
             "category": "saving",
             "why_this_product": "Xây dựng quỹ dự phòng và sinh lời đều đặn mỗi ngày.",
             "tradeoff_summary": "Lợi nhuận ổn định, rủi ro cực thấp.",
@@ -40,7 +40,7 @@ _CATALOG: dict[str, ProductRecommendation] = {
         },
         {
             "product_id": "stock_account",
-            "product_name": "Tài Khoản Chứng Khoán ZaloPay",
+            "product_name": "Tài Khoản Chứng Khoán Zalopay",
             "category": "investing",
             "why_this_product": "Dành tiền nhàn rỗi đầu tư nhỏ giọt thay vì mạo hiểm số vốn lớn.",
             "tradeoff_summary": "Sinh lời cao hơn tiết kiệm nhưng có biến động thị trường.",
@@ -49,7 +49,7 @@ _CATALOG: dict[str, ProductRecommendation] = {
         },
         {
             "product_id": "insurance",
-            "product_name": "Bảo Hiểm Sức Khỏe ZaloPay",
+            "product_name": "Bảo Hiểm Sức Khỏe Zalopay",
             "category": "safety",
             "why_this_product": "Gia cường khiên phòng vệ sức khoẻ, lá chắn trước biến cố.",
             "tradeoff_summary": "Chi phí nhỏ, an tâm tuyệt đối.",
@@ -58,7 +58,7 @@ _CATALOG: dict[str, ProductRecommendation] = {
         },
         {
             "product_id": "flight_ticket",
-            "product_name": "Đặt Vé Máy Bay ZaloPay",
+            "product_name": "Đặt Vé Máy Bay Zalopay",
             "category": "travel",
             "why_this_product": "Đi du lịch thỏa chí tang bồng, đặt vé khứ hồi siêu nhanh.",
             "tradeoff_summary": "Bay ngay, nhẹ gánh với voucher và chiết khấu.",
@@ -67,7 +67,7 @@ _CATALOG: dict[str, ProductRecommendation] = {
         },
         {
             "product_id": "movie_ticket",
-            "product_name": "Đặt Vé Xem Phim ZaloPay",
+            "product_name": "Đặt Vé Xem Phim Zalopay",
             "category": "entertainment",
             "why_this_product": "Giải trí thả ga với chiết khấu hời từ các hệ thống rạp.",
             "tradeoff_summary": "Giải tỏa stress tốn ít chi phí.",
@@ -76,7 +76,7 @@ _CATALOG: dict[str, ProductRecommendation] = {
         },
         {
             "product_id": "vietlott",
-            "product_name": "Keno / Vietlott ZaloPay",
+            "product_name": "Keno / Vietlott Zalopay",
             "category": "entertainment",
             "why_this_product": "Chi tiêu vượt quá giới hạn lý trí — đổi vận may 10k hợp lý hơn.",
             "tradeoff_summary": "Bỏ 10k lấy cơ hội độc đắc 100 tỷ.",

@@ -11,3 +11,6 @@ coverage/
 backend/.venv/
 backend/**/__pycache__/
 *.pyc
+
+.greennode.json
+.agentbase/

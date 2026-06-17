@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from .config import ENV, REPO_ROOT
-from .routers import profile, proposals
+from .routers import cards, chat, profile, proposals
 
 app = FastAPI(title="Hỏi HĐQT Tài Chính API")
 
@@ -25,6 +25,8 @@ app.add_middleware(
 
 app.include_router(profile.router)
 app.include_router(proposals.router)
+app.include_router(chat.router)
+app.include_router(cards.router)
 
 
 @app.get("/health")

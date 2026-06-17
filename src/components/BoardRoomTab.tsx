@@ -7,16 +7,17 @@ interface BoardRoomTabProps {
   proposalName: string | null;
   amount: number | null;
   activeDebate: DebateResponse | null;
+  displayName: string;
   onUserSubmitDecision: (action: UserAction) => void;
   onReset: () => void;
   onNavigateToNewProposal: () => void;
 }
 
-export default function BoardRoomTab({ proposalName, amount, activeDebate, onUserSubmitDecision, onReset, onNavigateToNewProposal }: BoardRoomTabProps) {
+export default function BoardRoomTab({ proposalName, amount, activeDebate, displayName, onUserSubmitDecision, onReset, onNavigateToNewProposal }: BoardRoomTabProps) {
   if (activeDebate && proposalName && amount !== null) {
     return (
       <div className="animate-fade-in">
-        <BoardRoom proposalName={proposalName} amount={amount} debate={activeDebate} onUserSubmitDecision={onUserSubmitDecision} onReset={onReset} />
+        <BoardRoom proposalName={proposalName} amount={amount} debate={activeDebate} displayName={displayName} onUserSubmitDecision={onUserSubmitDecision} onReset={onReset} />
       </div>
     );
   }

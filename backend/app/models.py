@@ -177,7 +177,6 @@ class UserState(BaseModel):
 class ProfileComputed(BaseModel):
     """Derived fields the engine computes — never duplicated client-side."""
 
-    personality_label: str
     health_score: int
     health_label: str
     health_description: str
@@ -322,3 +321,53 @@ class ResolveDecisionInput(BaseModel):
     evaluation: EvaluationResult
     narration: NarrationResult
     user_action: UserAction
+
+
+# ---------------------------------------------------------------------------
+# Chat / AI follow-up flow
+# ---------------------------------------------------------------------------
+
+
+class FollowupRequest(BaseModel):
+    question: str = Field(min_length=1)
+    display_name: str = "CEO"
+
+
+class FollowupQuestion(BaseModel):
+    question: str
+    options: list[str] = []
+
+
+class FollowupResponse(BaseModel):
+    follow_up_questions: list[FollowupQuestion]
+    question_type: Literal["spending", "advice", "general"]
+
+
+class AdviceRequest(BaseModel):
+    original_question: str
+    answers: list[str] = []
+    display_name: str = "CEO"
+
+
+class AdviceResponse(BaseModel):
+    answer: str
+    is_spending_related: bool
+    suggested_proposal_name: Optional[str] = None
+
+
+# ---------------------------------------------------------------------------
+# Shareable verdict card (GPT Image 1 background)
+# ---------------------------------------------------------------------------
+
+
+class VerdictCardRequest(BaseModel):
+    proposal_name: str
+    amount: float
+    decision: str
+    theme: str
+    key_quote: str
+    display_name: str
+
+
+class VerdictCardResponse(BaseModel):
+    image_b64: str

@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { BOARD_MEMBERS, DebateResponse, MemberVote, UserAction } from "../types";
-import { ArrowRight, Check, ShieldAlert, Sparkles, RefreshCw, TrendingDown, TrendingUp } from "lucide-react";
+import { ArrowRight, Check, Share2, ShieldAlert, Sparkles, RefreshCw, TrendingDown, TrendingUp } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import VerdictCard from "./VerdictCard";
 
 interface BoardRoomProps {
   proposalName: string;
   amount: number;
   debate: DebateResponse;
+  displayName: string;
   onUserSubmitDecision: (action: UserAction) => void;
   onReset: () => void;
 }
@@ -52,13 +54,14 @@ const DECISION_BANNER: Record<string, { bg: string; title: string; emoji: string
 
 const IMPACT_DOT: Record<string, string> = { high: "bg-rose-500", medium: "bg-amber-500", low: "bg-emerald-500" };
 
-export default function BoardRoom({ proposalName, amount, debate, onUserSubmitDecision, onReset }: BoardRoomProps) {
+export default function BoardRoom({ proposalName, amount, debate, displayName, onUserSubmitDecision, onReset }: BoardRoomProps) {
   const { narration, evaluation } = debate;
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [phase, setPhase] = useState<"debate" | "voting" | "resolution">("debate");
   const [voteReveals, setVoteReveals] = useState<Record<string, boolean>>({});
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isWhyOpen, setIsWhyOpen] = useState(false);
+  const [showVerdictCard, setShowVerdictCard] = useState(false);
 
   const formattedAmount = new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(amount);
   const steps = narration.debate_steps;
@@ -379,12 +382,28 @@ export default function BoardRoom({ proposalName, amount, debate, onUserSubmitDe
             </button>
           </div>
 
-          <div className="mt-6 pt-4 border-t-2 border-dashed border-black flex justify-end">
+          <div className="mt-6 pt-4 border-t-2 border-dashed border-black flex items-center justify-between">
+            <button
+              onClick={() => setShowVerdictCard(true)}
+              className="flex items-center gap-1.5 px-3 py-2 bg-yellow-300 hover:bg-yellow-400 border-2 border-black rounded-xl font-black text-xs uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] cursor-pointer"
+            >
+              <Share2 className="w-3.5 h-3.5" /> Chia sẻ
+            </button>
             <button onClick={onReset} className="text-gray-800 hover:text-black font-black uppercase underline flex items-center gap-1 cursor-pointer text-xs">
               <RefreshCw className="w-3.5 h-3.5" /> <span>Xem xét hồ sơ khác</span>
             </button>
           </div>
         </div>
+      )}
+
+      {showVerdictCard && (
+        <VerdictCard
+          proposalName={proposalName}
+          amount={amount}
+          debate={debate}
+          displayName={displayName}
+          onClose={() => setShowVerdictCard(false)}
+        />
       )}
     </div>
   );

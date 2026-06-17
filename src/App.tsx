@@ -2,22 +2,21 @@ import React, { useState, useEffect } from "react";
 import NewProposalTab from "./components/NewProposalTab";
 import BoardRoomTab from "./components/BoardRoomTab";
 import OnboardingFlow from "./components/OnboardingFlow";
-import UserProfileCard from "./components/UserProfileCard";
-import DashboardTab from "./components/DashboardTab";
+import SplashScreen from "./components/SplashScreen";
 import GoalsTab from "./components/GoalsTab";
 import HistoryTab from "./components/HistoryTab";
 import { ProfileView, DebateResponse, UserAction, BOARD_MEMBERS } from "./types";
 import {
   AlertOctagon,
-  LayoutDashboard,
   PlusCircle,
   Scale,
   Target,
-  History
+  History,
+  ExternalLink,
 } from "lucide-react";
 
 type ProposalDraft = { proposal_name: string; amount: number; context: string; intent_hint?: string };
-type Tab = "dashboard" | "new-proposal" | "boardroom" | "goals" | "history";
+type Tab = "proposals" | "boardroom" | "goals" | "history";
 
 const LOADING_MESSAGES = [
   "Chủ tịch đang gõ búa đòi trật tự cuộc họp khẩn... 🔨",
@@ -44,7 +43,8 @@ async function fetchJSON<T>(path: string, init?: RequestInit): Promise<T> {
 export default function App() {
   const [appState, setAppState] = useState<ProfileView | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
-  const [currentTab, setCurrentTab] = useState<Tab>("dashboard");
+  const [showSplash, setShowSplash] = useState(false);
+  const [currentTab, setCurrentTab] = useState<Tab>("proposals");
   const [isLoading, setIsLoading] = useState(false);
   const [funnyLoadingText, setFunnyLoadingText] = useState("");
   const [activeProposal, setActiveProposal] = useState<ProposalDraft | null>(null);
@@ -52,10 +52,14 @@ export default function App() {
   const [apiError, setApiError] = useState<string | null>(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [proposalPrefill, setProposalPrefill] = useState<Partial<ProposalDraft> | null>(null);
 
   useEffect(() => {
     fetchJSON<ProfileView>("/api/profile")
-      .then(setAppState)
+      .then((data) => {
+        setAppState(data);
+        if (!data.onboarding_completed) setShowSplash(true);
+      })
       .catch((e) => setApiError(e.message))
       .finally(() => setIsInitializing(false));
   }, []);
@@ -95,6 +99,7 @@ export default function App() {
     setIsLoading(true);
     setApiError(null);
     setActiveProposal(proposal);
+    setProposalPrefill(null);
     try {
       const result = await fetchJSON<DebateResponse>("/api/proposals/debate", {
         method: "POST",
@@ -102,11 +107,16 @@ export default function App() {
       });
       setActiveDebate(result);
     } catch (error: any) {
-      setApiError(error.message || "Không thể kết nối tới HĐQT.");
+      setApiError(error.message || "Không thể kết nối tới Hội đồng quản trị.");
       setActiveProposal(null);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleChatProposalSuggestion = (draft: { proposal_name: string; amount: number; context: string }) => {
+    setProposalPrefill(draft);
+    setCurrentTab("proposals");
   };
 
   const handleUserDecision = async (action: UserAction) => {
@@ -129,7 +139,7 @@ export default function App() {
     } finally {
       setActiveProposal(null);
       setActiveDebate(null);
-      setCurrentTab("dashboard");
+      setCurrentTab("proposals");
     }
   };
 
@@ -137,7 +147,7 @@ export default function App() {
     setActiveProposal(null);
     setActiveDebate(null);
     setApiError(null);
-    setCurrentTab("new-proposal");
+    setCurrentTab("proposals");
   };
 
   const executeClearHistory = () => {
@@ -150,15 +160,20 @@ export default function App() {
     if (!appState) return;
     persist({ ...appState, onboarding_completed: false }).catch((e) => setApiError(e.message));
     setShowLogoutConfirm(false);
+    setShowSplash(true);
   };
 
   if (isInitializing || !appState) {
     return (
       <div className="w-full min-h-screen bg-[#F0F2F5] flex flex-col items-center justify-center">
         <div className="animate-spin text-4xl mb-4">⚙️</div>
-        <h2 className="font-black text-xl uppercase tracking-tighter">Đang kết nối HĐQT...</h2>
+        <h2 className="font-black text-xl uppercase tracking-tighter">Đang kết nối Hội đồng quản trị...</h2>
       </div>
     );
+  }
+
+  if (showSplash) {
+    return <SplashScreen onStart={() => setShowSplash(false)} />;
   }
 
   if (!appState.onboarding_completed) {
@@ -169,11 +184,10 @@ export default function App() {
     );
   }
 
-  const { profile, computed } = appState;
+  const { profile } = appState;
 
   const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
-    { id: "dashboard", label: "Tổng quan", icon: <LayoutDashboard className="w-4 h-4" /> },
-    { id: "new-proposal", label: "Đề xuất mới", icon: <PlusCircle className="w-4 h-4" /> },
+    { id: "proposals", label: "Đề xuất", icon: <PlusCircle className="w-4 h-4" /> },
     { id: "boardroom", label: `Phòng họp${activeDebate ? " 🔴" : ""}`, icon: <Scale className="w-4 h-4" /> },
     { id: "goals", label: "Mục tiêu", icon: <Target className="w-4 h-4" /> },
     { id: "history", label: "Lịch sử", icon: <History className="w-4 h-4" /> },
@@ -194,14 +208,9 @@ export default function App() {
           <div className="w-10 h-10 bg-indigo-600 border-2 border-black rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
             🕴️
           </div>
-          <h1 className="text-sm md:text-lg font-black uppercase tracking-tighter leading-none">HĐQT Tài Chính</h1>
+          <h1 className="text-sm md:text-lg font-black uppercase tracking-tighter leading-none">Hội đồng quản trị Tài Chính</h1>
         </div>
         <div className="flex items-center gap-3 md:gap-4">
-          <div className="flex flex-col items-end shrink-0 bg-slate-50 border-2 border-black px-2.5 py-1 rounded-xl text-right max-w-[150px]">
-            <span className="font-black text-xs text-slate-800 tracking-tight block truncate w-full">
-              👤 {profile.display_name}
-            </span>
-          </div>
           <div className="flex flex-col items-end shrink-0">
             <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none">Kỷ luật</span>
             <span className={`font-black text-sm mt-0.5 ${profile.discipline_score >= 70 ? "text-emerald-700" : profile.discipline_score >= 40 ? "text-amber-500" : "text-rose-600"}`}>
@@ -254,30 +263,31 @@ export default function App() {
               <div className="w-24 h-24 bg-indigo-600 border-4 border-black text-white rounded-full flex items-center justify-center font-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-4xl animate-spin mb-6">
                 ⚖️
               </div>
-              <h3 className="text-2xl font-black uppercase text-black tracking-tight">HĐQT đang tranh luận...</h3>
+              <h3 className="text-2xl font-black uppercase text-black tracking-tight">Hội đồng quản trị đang tranh luận...</h3>
               <p className="text-md text-gray-800 font-bold max-w-md mt-4 bg-yellow-50 border border-black p-3.5 rounded-xl shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                 {funnyLoadingText}
               </p>
             </div>
           ) : (
             <>
-              {currentTab === "dashboard" && (
-                <DashboardTab
-                  profile={profile}
-                  computed={computed}
-                  onNavigateToNewProposal={() => setCurrentTab("new-proposal")}
-                  onNavigateToGoals={() => setCurrentTab("goals")}
+              {currentTab === "proposals" && (
+                <NewProposalTab
+                  onSubmit={handleProposalSubmit}
+                  isLoading={isLoading}
+                  prefill={proposalPrefill}
+                  displayName={profile.display_name}
+                  onSubmitProposal={handleChatProposalSuggestion}
                 />
               )}
-              {currentTab === "new-proposal" && <NewProposalTab onSubmit={handleProposalSubmit} isLoading={isLoading} />}
               {currentTab === "boardroom" && (
                 <BoardRoomTab
                   proposalName={activeProposal?.proposal_name ?? null}
                   amount={activeProposal?.amount ?? null}
                   activeDebate={activeDebate}
+                  displayName={profile.display_name}
                   onUserSubmitDecision={handleUserDecision}
                   onReset={handleResetDebate}
-                  onNavigateToNewProposal={() => setCurrentTab("new-proposal")}
+                  onNavigateToNewProposal={() => setCurrentTab("proposals")}
                 />
               )}
               {currentTab === "goals" && <GoalsTab appState={appState} onEdit={handleStateEdit} />}
@@ -287,17 +297,28 @@ export default function App() {
         </div>
 
         <div className="w-full lg:w-80 shrink-0 flex flex-col gap-6">
-          <UserProfileCard profile={profile} computed={computed} onSave={handleProfileSave} />
           <div className="bg-white border-4 border-black rounded-3xl p-5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-black">
-            <h4 className="font-black text-xs uppercase border-b-2 border-black pb-2 mb-3">🕴️ THÀNH VIÊN HĐQT</h4>
+            <h4 className="font-black text-xs uppercase border-b-2 border-black pb-2 mb-3">🕴️ Thành viên Hội đồng quản trị</h4>
             <div className="space-y-3">
               {Object.values(BOARD_MEMBERS).map((m) => (
-                <div key={m.id} className="flex gap-2.5 items-start text-xs border-b border-dashed border-slate-150 pb-2 mb-2 last:border-0 last:pb-0 last:mb-0">
-                  <span className="text-xl bg-slate-50 border border-black rounded p-1 shadow-sm shrink-0">{m.emoji}</span>
-                  <div>
-                    <strong className="text-slate-900 font-bold block">{m.name}</strong>
-                    <span className="text-[10px] text-gray-400 font-mono font-bold leading-none uppercase">{m.title}</span>
+                <div key={m.id} className="flex flex-col gap-1 border-b border-dashed border-slate-200 pb-2 mb-2 last:border-0 last:pb-0 last:mb-0">
+                  <div className="flex gap-2.5 items-start text-xs">
+                    <span className="text-xl bg-slate-50 border border-black rounded p-1 shadow-sm shrink-0">{m.emoji}</span>
+                    <div>
+                      <strong className="text-slate-900 font-bold block">{m.name}</strong>
+                      <span className="text-[10px] text-gray-400 font-mono font-bold leading-none uppercase">{m.title}</span>
+                    </div>
                   </div>
+                  {m.zalopay_url && (
+                    <a
+                      href={m.zalopay_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ml-9 text-[10px] font-black text-indigo-600 hover:text-indigo-800 flex items-center gap-1 transition-colors"
+                    >
+                      Mở trong Zalopay <ExternalLink className="w-2.5 h-2.5" /> →
+                    </a>
+                  )}
                 </div>
               ))}
             </div>
@@ -307,7 +328,7 @@ export default function App() {
 
       <div className="fixed bottom-16 right-4 md:right-8 z-40 md:bottom-8">
         <button
-          onClick={() => { setCurrentTab("new-proposal"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+          onClick={() => { setCurrentTab("proposals"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
           className="group flex items-center gap-2 bg-indigo-600 hover:bg-yellow-300 text-white hover:text-black border-4 border-black px-4 py-3 md:px-5 md:py-4 rounded-full shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-1 transition-all cursor-pointer"
         >
           <span className="text-xl md:text-2xl leading-none">⚖️</span>

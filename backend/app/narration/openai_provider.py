@@ -10,8 +10,8 @@ from __future__ import annotations
 
 import json
 
-from ..config import LLM_API_KEY, LLM_BASE_URL, LLM_MODEL
-from ..models import BoardConclusion, DebateStep, EvaluationResult, MemberVote, NarrationResult, ProposalInput
+from ..config import LLM_API_KEY, LLM_BASE_URL, NARRATION_MODEL
+from ..models import BoardConclusion, DebateStep, EvaluationResult, MemberVote, NarrationResult, ProposalInput  # noqa: F401
 from .base import NarrationProvider
 
 
@@ -44,14 +44,14 @@ Trả về JSON hợp lệ theo schema sau, KHÔNG thêm text ngoài JSON:
 {{
   "theme": "<string — chủ đề cuộc họp>",
   "debate_steps": [
-    {{"member": "<tên thành viên>", "stance": "approve|reject|neutral", "speech": "<lời thoại>"}}
+    {{"member_id": "<id snake_case: chairman/cxo/cho/clo/luck_director/cto/cgo/cro/wallet>", "member_name": "<tên hiển thị vui>", "quote": "<lời thoại>"}}
   ],
   "votes": [
-    {{"member": "<tên>", "vote": "approve|reject", "reason": "<lý do ngắn>"}}
+    {{"member_id": "<id snake_case>", "member_name": "<tên hiển thị>", "vote": "approve|reject", "reason": "<lý do ngắn>"}}
   ],
   "conclusion": {{
     "approved": true|false,
-    "final_speech": "<lời tổng kết của chairman>"
+    "summary": "<lời tổng kết của chairman>"
   }}
 }}"""
 
@@ -99,12 +99,12 @@ _SCHEMA = {
 
 class OpenAIProvider(NarrationProvider):
     def __init__(self) -> None:
-        if not LLM_API_KEY or not LLM_BASE_URL or not LLM_MODEL:
-            raise RuntimeError("Missing LLM_API_KEY, LLM_BASE_URL, or LLM_MODEL")
+        if not LLM_API_KEY or not LLM_BASE_URL or not NARRATION_MODEL:
+            raise RuntimeError("Missing LLM_API_KEY, LLM_BASE_URL, or NARRATION_MODEL")
         from openai import AsyncOpenAI
 
         self._client = AsyncOpenAI(api_key=LLM_API_KEY, base_url=LLM_BASE_URL)
-        self._model = LLM_MODEL
+        self._model = NARRATION_MODEL
 
     async def generate_board_narration(self, evaluation: EvaluationResult, proposal: ProposalInput, display_name: str) -> NarrationResult:
         prompt = _build_prompt(evaluation, proposal, display_name)
@@ -118,11 +118,30 @@ class OpenAIProvider(NarrationProvider):
         raw = response.choices[0].message.content or "{}"
         data = json.loads(raw)
 
+        conclusion_raw = data.get("conclusion", {})
         return NarrationResult(
             theme=data.get("theme", "Phiên họp HĐQT"),
-            debate_steps=data.get("debate_steps", []),
-            votes=data.get("votes", []),
-            conclusion=data.get("conclusion", {"approved": False, "final_speech": ""}),
+            debate_steps=[
+                DebateStep(
+                    member_id=s.get("member_id", "chairman"),
+                    member_name=s.get("member_name", s.get("member_id", "Chairman")),
+                    quote=s.get("quote", s.get("speech", "")),
+                )
+                for s in data.get("debate_steps", [])
+            ],
+            votes=[
+                MemberVote(
+                    member_id=v.get("member_id", "chairman"),
+                    member_name=v.get("member_name", v.get("member_id", "Chairman")),
+                    vote=v.get("vote", "reject"),
+                    reason=v.get("reason", ""),
+                )
+                for v in data.get("votes", [])
+            ],
+            conclusion=BoardConclusion(
+                approved=conclusion_raw.get("approved", False),
+                summary=conclusion_raw.get("summary", conclusion_raw.get("final_speech", "")),
+            ),
             provider="openai-compatible",
             model=self._model,
             fallback_used=False,

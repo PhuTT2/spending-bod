@@ -1,39 +1,7 @@
-"""Profile-derived computations: personality label, health score, initial
-discipline score. These used to be duplicated (and drifting — two different
-wordings of the same personality label, two different fixed-expense ratios)
-across OnboardingFlow.tsx, UserProfileCard.tsx and DashboardTab.tsx. Now there
-is exactly one implementation, and the frontend only ever displays what the
-backend computed.
-"""
+"""Profile-derived computations: health score, initial discipline score."""
 from __future__ import annotations
 
 from ..models import DecisionRecord, FinancialProfile
-
-_PERSONALITY_LABELS = {
-    "travel": "Chiến Thần Xê Dịch ✈️",
-    "shopping": "Hán Tử Săn Deal Mua Sắm 🛍️",
-    "entertainment": "Sứ Giả Giải Trí Hưởng Thụ 🍿",
-    "saving": "Thủ Quỹ Tích Lũy Thép 🐷",
-    "investing": "Cá Mập Đu Đỉnh Đầu Tư 📈",
-    "safety": "Thánh Phòng Thủ Rủi Ro 🛡️",
-}
-
-_RISK_TIEBREAK = {
-    "high": "Nhà Đầu Cơ Mạo Hiểm ⚡",
-    "low": "CEO Phòng Thủ Cẩn Trọng 🏰",
-    "medium": "Sếp Tổng Cân Bằng Trí Tuệ 🧠",
-}
-
-
-def compute_personality_label(profile: FinancialProfile) -> str:
-    lp = profile.lifestyle_preference
-    scored = [(name, getattr(lp, name)) for name in _PERSONALITY_LABELS]
-    best_name, best_score = max(scored, key=lambda item: item[1])
-
-    all_default = all(score == 3 for _, score in scored)
-    if all_default:
-        return _RISK_TIEBREAK.get(profile.risk_tolerance, _RISK_TIEBREAK["medium"])
-    return _PERSONALITY_LABELS[best_name]
 
 
 def compute_initial_discipline_score(profile: FinancialProfile) -> int:

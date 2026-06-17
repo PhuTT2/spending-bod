@@ -8,3 +8,6 @@ backend/**/__pycache__
 .env
 .env.local
 *.log
+
+.greennode.json
+.agentbase/

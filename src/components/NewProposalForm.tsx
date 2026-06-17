@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { DollarSign, FileText, ShoppingBag, Compass, Landmark, Award, ShieldCheck, Star } from "lucide-react";
 
 interface NewProposalFormProps {
   onSubmit: (proposal: { proposal_name: string; amount: number; context: string; intent_hint?: string }) => void;
   isLoading: boolean;
+  prefill?: Partial<{ proposal_name: string; amount: number; context: string }> | null;
+  submitLabel?: string;
 }
 
 interface Template {
@@ -25,21 +27,71 @@ const INTENTS = [
 ];
 
 const TEMPLATES: Template[] = [
-  { icon: <ShoppingBag className="w-4 h-4 text-rose-500" />, label: "Mua điện thoại", name: "Nâng cấp iPhone 16 Pro Max", amount: 35000000, context: "Máy cũ chai pin, cần đổi để làm việc.", intent: "Tiêu dùng" },
-  { icon: <Compass className="w-4 h-4 text-amber-500" />, label: "Du lịch", name: "Đi Nhật mùa lá đỏ", amount: 45000000, context: "Đi chữa lành sau chuỗi ngày OT.", intent: "Du lịch" },
-  { icon: <Landmark className="w-4 h-4 text-emerald-500" />, label: "Đầu tư", name: "Mua chứng chỉ quỹ VN30", amount: 15000000, context: "Đón sóng tăng trưởng trung hạn.", intent: "Đầu tư" },
-  { icon: <Award className="w-4 h-4 text-indigo-500" />, label: "Học tập", name: "Khóa học AI & Automation", amount: 9500000, context: "Tăng tốc hiệu suất công việc.", intent: "Học tập" },
-  { icon: <ShieldCheck className="w-4 h-4 text-purple-500" />, label: "Bảo hiểm", name: "Bảo hiểm sức khỏe", amount: 8000000, context: "Phòng ngừa rủi ro bất ngờ.", intent: "Bảo vệ tài chính" },
-  { icon: <Star className="w-4 h-4 text-slate-500" />, label: "Khác", name: "", amount: 0, context: "", intent: "Tiêu dùng" },
+  {
+    icon: <ShoppingBag className="w-4 h-4 text-rose-500" />,
+    label: "Mua điện thoại",
+    name: "Nâng cấp iPhone 16 Pro Max",
+    amount: 35000000,
+    context: "Máy cũ chai pin, cần đổi để làm việc.",
+    intent: "Tiêu dùng",
+  },
+  {
+    icon: <Compass className="w-4 h-4 text-amber-500" />,
+    label: "Du lịch",
+    name: "Đi Nhật mùa lá đỏ",
+    amount: 45000000,
+    context: "Đi chữa lành sau chuỗi ngày OT.",
+    intent: "Du lịch",
+  },
+  {
+    icon: <Landmark className="w-4 h-4 text-emerald-500" />,
+    label: "Đầu tư",
+    name: "Mua chứng chỉ quỹ VN30",
+    amount: 15000000,
+    context: "Đón sóng tăng trưởng trung hạn.",
+    intent: "Đầu tư",
+  },
+  {
+    icon: <Award className="w-4 h-4 text-indigo-500" />,
+    label: "Học tập",
+    name: "Khóa học AI & Automation",
+    amount: 9500000,
+    context: "Tăng tốc hiệu suất công việc.",
+    intent: "Học tập",
+  },
+  {
+    icon: <ShieldCheck className="w-4 h-4 text-purple-500" />,
+    label: "Bảo hiểm",
+    name: "Bảo hiểm sức khỏe",
+    amount: 8000000,
+    context: "Phòng ngừa rủi ro bất ngờ.",
+    intent: "Bảo vệ tài chính",
+  },
+  {
+    icon: <Star className="w-4 h-4 text-slate-500" />,
+    label: "Khác",
+    name: "",
+    amount: 0,
+    context: "",
+    intent: "Tiêu dùng",
+  },
 ];
 
-export default function NewProposalForm({ onSubmit, isLoading }: NewProposalFormProps) {
+export default function NewProposalForm({ onSubmit, isLoading, prefill, submitLabel }: NewProposalFormProps) {
   const [proposalName, setProposalName] = useState("");
   const [amountInput, setAmountInput] = useState("");
   const [context, setContext] = useState("");
   const [selectedIntent, setSelectedIntent] = useState<string>("Tiêu dùng");
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [selectedTemplate, setSelectedTemplate] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!prefill) return;
+    if (prefill.proposal_name) setProposalName(prefill.proposal_name);
+    if (prefill.amount) setAmountInput(prefill.amount.toString());
+    if (prefill.context) setContext(prefill.context);
+    setSelectedTemplate(null);
+  }, [prefill]);
 
   const formatCurrency = (val: string) => {
     const num = parseInt(val.replace(/\D/g, ""), 10);
@@ -167,7 +219,7 @@ export default function NewProposalForm({ onSubmit, isLoading }: NewProposalForm
           disabled={isLoading || !proposalName.trim() || !amountInput}
           className="w-full py-4 text-base font-black uppercase tracking-wider bg-indigo-600 hover:bg-yellow-300 text-white hover:text-black border-2 border-black rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-y-0.5 transition disabled:opacity-50 cursor-pointer"
         >
-          {isLoading ? "Đang gửi..." : "Gửi lên HĐQT"}
+          {isLoading ? "Đang xử lý..." : (submitLabel ?? "Tiếp theo →")}
         </button>
       </form>
     </div>

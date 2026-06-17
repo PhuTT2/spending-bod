@@ -23,6 +23,20 @@ LLM_PROVIDER = os.getenv("LLM_PROVIDER", "").strip().lower()  # "fallback" force
 LLM_BASE_URL = os.getenv("LLM_BASE_URL", "").strip()
 LLM_API_KEY = os.getenv("LLM_API_KEY", "").strip()
 LLM_MODEL = os.getenv("LLM_MODEL", "").strip()
+
+# Per-task model overrides — each call site can use a different model.
+# Falls back to LLM_MODEL / LLM_API_KEY / LLM_BASE_URL if not set.
+NARRATION_MODEL = os.getenv("NARRATION_MODEL", LLM_MODEL).strip()
+FOLLOWUP_MODEL = os.getenv("FOLLOWUP_MODEL", LLM_MODEL).strip()
+FOLLOWUP_BASE_URL = os.getenv("FOLLOWUP_BASE_URL", LLM_BASE_URL).strip()
+FOLLOWUP_API_KEY = os.getenv("FOLLOWUP_API_KEY", LLM_API_KEY).strip()
+
+# Image generation — defaults to GreenNode MaaS so no extra key needed.
+# Set IMAGE_BASE_URL / IMAGE_API_KEY only if using a different endpoint (e.g. api.openai.com).
+IMAGE_BASE_URL = os.getenv("IMAGE_BASE_URL", LLM_BASE_URL).strip()
+IMAGE_API_KEY = os.getenv("IMAGE_API_KEY", LLM_API_KEY).strip()
+IMAGE_MODEL = os.getenv("IMAGE_MODEL", "gpt-image-1").strip()
+
 ENV = os.getenv("NODE_ENV", os.getenv("ENV", "development"))
 PORT = int(os.getenv("PORT", "8000" if ENV != "production" else "3000"))
 

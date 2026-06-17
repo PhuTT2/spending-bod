@@ -1,75 +1,149 @@
-# Hỏi HĐQT Tài Chính
+# 🕴️ Hội đồng quản trị Tài Chính
 
-Trình mọi khoản chi lớn cho một "hội đồng quản trị" AI duyệt trước khi bạn quẹt thẻ.
+> **GreenNode Claw-a-thon 2026** — AI-powered personal finance board built on GreenNode AgentBase
 
-## Kiến trúc
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-AgentBase-6366f1?style=for-the-badge)](https://endpoint-8fd7a194-2b2c-411b-b4a6-097ae6836767.agentbase-runtime.aiplatform.vngcloud.vn)
+
+---
+
+## Vấn đề
+
+Chi tiêu cá nhân thường bị quyết định bởi cảm xúc nhất thời — không có ai phản biện, không có bối cảnh tài chính đầy đủ, không có quy trình ra quyết định có cấu trúc. Kết quả: mua sắm ngẫu hứng, vượt ngân sách, mục tiêu tài chính bị trì hoãn vô thời hạn.
+
+Đây là vấn đề phổ biến với **Gen Z và Millennials đi làm** — thu nhập đủ sống tốt nhưng thiếu kỷ luật tài chính và thiếu công cụ ra quyết định phù hợp.
+
+---
+
+## Người dùng mục tiêu
+
+Nhân viên đi làm (22–35 tuổi) có thu nhập ổn định, muốn kiểm soát chi tiêu và đạt mục tiêu tài chính dài hạn (du lịch, mua nhà, đầu tư) nhưng hay "tự thuyết phục" mình mua những thứ không cần thiết.
+
+---
+
+## Cách agent giải quyết
+
+Hội đồng quản trị Tài Chính là một **multi-persona AI agent** mô phỏng một hội đồng gồm 9 thành viên đại diện cho các chiều kích tài chính khác nhau (tiết kiệm, đầu tư, rủi ro, trải nghiệm, đòn bẩy...). Mỗi khi người dùng muốn chi tiêu một khoản tiền, họ phải "đệ trình" lên hội đồng để được phán xét.
+
+### Luồng hoạt động
 
 ```
-[React + Vite]  ──fetch /api──▶  [FastAPI]
-   src/                            backend/app/
-                                     engine/      ← rule engine, zero AI dependency
-                                     narration/    ← optional AI plug-in (Gemini + fallback)
-                                     routers/      ← HTTP layer
+User điền đề xuất (tên, số tiền, loại chi tiêu)
+        ↓
+AI hỏi thêm bối cảnh tài chính (qua /api/chat/followup)
+        ↓
+Engine đánh giá tài chính (health score, affordability, goal impact)
+        ↓
+AI narration sinh ra cuộc tranh luận giữa 9 thành viên HĐQT
+        ↓
+Phán quyết: Approve / Approve with conditions / Delay / Reject
+        ↓
+User chọn Tuân theo hoặc Bất tuân → cập nhật điểm kỷ luật
 ```
 
-- **Functional-first**: every score and decision comes from `backend/app/engine/` — pure
-  Python, no network calls, fully testable without any AI provider configured.
-- **Model-agnostic**: `backend/app/narration/` wraps the AI layer behind one interface
-  (`NarrationProvider`). It only narrates an already-finished decision; it never computes one.
-  Missing/invalid API key → automatic deterministic fallback, never a crash.
-- **Thresholds live in config, not code**: `config/financial_rules.json`.
+### Các agent/module chạy trên GreenNode AgentBase
 
-See [backend/app/models.py](backend/app/models.py) for the full API contract — it's the
-single source of truth both the frontend and any future automated agent (e.g. a GreenNode
-AgentBase agent calling `POST /api/proposals/evaluate` directly) consume.
+| Module | Vai trò | Model |
+|--------|---------|-------|
+| **Narration Agent** | Sinh ra lời thoại tranh luận của 9 thành viên HĐQT | `google/gemma-4-31b-it` |
+| **Follow-up Agent** | Hỏi thêm bối cảnh tài chính trước khi đánh giá | `google/gemma-4-31b-it` |
+| **Advice Agent** | Tư vấn tài chính tổng quát dựa trên profile | `google/gemma-4-31b-it` |
+| **Evaluation Engine** | Rule-based scoring (không dùng LLM) | — |
 
-## Chạy local
+Toàn bộ backend chạy trên **GreenNode AgentBase Runtime** (`runtime-s2-general-2x4`), frontend React được serve cùng container.
 
-### 1. Backend (Python 3.11+)
+---
+
+## Giá trị mang lại
+
+| Trước | Sau |
+|-------|-----|
+| Quyết định chi tiêu trong vài giây theo cảm xúc | Có quy trình 3 bước: điền → AI hỏi bối cảnh → hội đồng phán xét |
+| Không biết chi tiêu ảnh hưởng tới mục tiêu thế nào | Xem ngay tác động lên emergency fund, goal progress, liquidity |
+| Không có ai phản biện | 9 persona AI với quan điểm khác nhau tranh luận trước khi ra phán quyết |
+| Kỷ luật tài chính không đo được | Điểm kỷ luật tăng/giảm theo từng quyết định, lưu lịch sử |
+
+---
+
+## Tech Stack
+
+```
+Frontend   React 18 + TypeScript + Vite + Tailwind CSS
+Backend    Python FastAPI
+AI         GreenNode MaaS (OpenAI-compatible API)
+Runtime    GreenNode AgentBase (Docker container)
+Registry   VNG Container Registry (VCR)
+```
+
+---
+
+## Cài đặt local
 
 ```bash
+# 1. Clone repo
+git clone <repo-url>
+cd spending-bod
+
+# 2. Copy và điền credentials
+cp .env.example .env
+# Điền LLM_API_KEY và các giá trị cần thiết vào .env
+
+# 3. Chạy backend
 cd backend
-python -m venv .venv
-.venv\Scripts\activate        # Windows
-# source .venv/bin/activate   # macOS/Linux
 pip install -r requirements.txt
-```
+uvicorn app.main:app --reload --port 8000
 
-### 2. Frontend
-
-```bash
+# 4. Chạy frontend (tab khác)
+cd ..
 npm install
-```
-
-### 3. Dev (hai process, một lệnh)
-
-```bash
 npm run dev
 ```
 
-Vite chạy ở `:3000` và proxy `/api/*` sang FastAPI ở `:8000`. Truy cập `http://localhost:3000`.
+---
 
-(`npm run dev` chạy đồng thời `vite` và `npm run dev:api` qua `concurrently` — đảm bảo venv ở
-`backend/.venv` đã activate, hoặc `uvicorn` đã có sẵn trên PATH, trước khi gọi lệnh này.)
-
-### 4. Production
+## Deploy lên GreenNode AgentBase
 
 ```bash
-npm run build      # build frontend -> dist/
-npm run start       # FastAPI phục vụ cả /api và dist/ trên cùng port :3000
+# Build Docker image
+docker build -t <image-tag> .
+
+# Push lên VCR
+docker push <image-tag>
+
+# Update runtime
+bash runtime.sh update <runtime-id> --image <image-tag> --flavor runtime-s2-general-2x4 --env-file .env --from-cr
 ```
 
-## API chính
+---
 
-| Method | Path | Mô tả |
-|---|---|---|
-| GET/PUT | `/api/profile` | Đọc/ghi toàn bộ trạng thái (profile, history, challenges) |
-| POST | `/api/profile/preview` | Tính trước personality/health score, không lưu |
-| POST | `/api/proposals/evaluate` | Chấm điểm thuần túy, không qua AI — endpoint cho agent |
-| POST | `/api/proposals/debate` | Chấm điểm + tường thuật phiên họp HĐQT (AI tùy chọn) |
-| POST | `/api/proposals/resolve` | Áp dụng lựa chọn tuân thủ/bất chấp của người dùng |
+## Cấu trúc project
 
-## Cấu hình
+```
+spending-bod/
+├── backend/
+│   ├── app/
+│   │   ├── engine/          # Evaluation engine (rule-based)
+│   │   │   ├── profile.py   # Health score computation
+│   │   │   └── products.py  # Zalopay product recommendation
+│   │   ├── narration/       # AI narration providers
+│   │   ├── routers/         # FastAPI routers
+│   │   └── models.py        # Pydantic models
+│   └── requirements.txt
+├── src/
+│   ├── components/          # React components
+│   │   ├── NewProposalTab   # Wizard: đề xuất + AI follow-up
+│   │   ├── BoardRoomTab     # Kết quả tranh luận HĐQT
+│   │   ├── GoalsTab         # Quản lý mục tiêu tài chính
+│   │   └── SplashScreen     # Onboarding với Zalopay integration
+│   └── types.ts             # TypeScript types (mirrors backend models)
+├── .env.example             # Template biến môi trường
+├── Dockerfile               # Multi-stage build (Node + Python)
+└── README.md
+```
 
-Tạo `.env` ở root (xem `.env.example`). `GEMINI_API_KEY` là tùy chọn — không có thì hệ thống
-tự dùng tường thuật mặc định, không lỗi.
+---
+
+## Live Demo
+
+🔗 **Endpoint**: `https://endpoint-8fd7a194-2b2c-411b-b4a6-097ae6836767.agentbase-runtime.aiplatform.vngcloud.vn`
+
+Mở tab ẩn danh, truy cập link trên, tạo profile và thử đệ trình một khoản chi tiêu lên Hội đồng quản trị.

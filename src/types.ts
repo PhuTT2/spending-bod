@@ -51,7 +51,6 @@ export interface FinancialProfile {
 }
 
 export interface ProfileComputed {
-  personality_label: string;
   health_score: number;
   health_label: string;
   health_description: string;
@@ -245,6 +244,28 @@ export interface DebateResponse {
   evaluation: EvaluationResult;
 }
 
+// --- Chat / AI follow-up ---------------------------------------------------
+
+export interface FollowupQuestion {
+  question: string;
+  options: string[];
+}
+
+export interface FollowupResponse {
+  follow_up_questions: FollowupQuestion[];
+  question_type: "spending" | "advice" | "general";
+}
+
+export interface AdviceResponse {
+  answer: string;
+  is_spending_related: boolean;
+  suggested_proposal_name: string | null;
+}
+
+export interface VerdictCardResponse {
+  image_b64: string;
+}
+
 export interface ResolveDecisionInput {
   proposal_name: string;
   amount: number;
@@ -266,13 +287,14 @@ export interface BoardMember {
   bgClass: string;
   borderClass: string;
   emoji: string;
+  zalopay_url?: string;
 }
 
 export const BOARD_MEMBERS: Record<string, BoardMember> = {
   chairman: {
     id: "chairman",
     name: "Chủ Tịch",
-    title: "Chủ tịch HĐQT",
+    title: "Chủ tịch Hội đồng quản trị",
     description: "Điều phối cuộc họp, tổng hợp ý kiến, lạnh lùng đầy uy nghiêm.",
     philosophy: "Đưa ra phán quyết tối cao, không cảm xúc.",
     color: "text-slate-200",
@@ -290,6 +312,7 @@ export const BOARD_MEMBERS: Record<string, BoardMember> = {
     bgClass: "bg-emerald-950/40",
     borderClass: "border-emerald-500/35",
     emoji: "✈️",
+    zalopay_url: "https://zalopay.vn/dat-ve-may-bay",
   },
   cho: {
     id: "cho",
@@ -301,6 +324,7 @@ export const BOARD_MEMBERS: Record<string, BoardMember> = {
     bgClass: "bg-amber-950/40",
     borderClass: "border-amber-500/35",
     emoji: "🍿",
+    zalopay_url: "https://zalopay.vn/dat-ve-phim",
   },
   clo: {
     id: "clo",
@@ -312,6 +336,7 @@ export const BOARD_MEMBERS: Record<string, BoardMember> = {
     bgClass: "bg-indigo-950/40",
     borderClass: "border-indigo-500/35",
     emoji: "💳",
+    zalopay_url: "https://zalopay.vn/dich-vu/tai-khoan-tra-sau",
   },
   luck_director: {
     id: "luck_director",
@@ -323,6 +348,7 @@ export const BOARD_MEMBERS: Record<string, BoardMember> = {
     bgClass: "bg-rose-950/40",
     borderClass: "border-rose-500/35",
     emoji: "🍀",
+    zalopay_url: "https://zalopay.vn/cach-mua-ve-so-vietlott-online-2226",
   },
   cto: {
     id: "cto",
@@ -334,6 +360,7 @@ export const BOARD_MEMBERS: Record<string, BoardMember> = {
     bgClass: "bg-yellow-950/40",
     borderClass: "border-yellow-500/35",
     emoji: "🐷",
+    zalopay_url: "https://zalopay.vn/dich-vu/gui-tiet-kiem",
   },
   cgo: {
     id: "cgo",
@@ -345,6 +372,7 @@ export const BOARD_MEMBERS: Record<string, BoardMember> = {
     bgClass: "bg-teal-950/40",
     borderClass: "border-teal-500/35",
     emoji: "📈",
+    zalopay_url: "https://zalopay.vn/dich-vu/tai-khoan-chung-khoan",
   },
   cro: {
     id: "cro",
@@ -356,6 +384,7 @@ export const BOARD_MEMBERS: Record<string, BoardMember> = {
     bgClass: "bg-rose-950/40",
     borderClass: "border-rose-500/35",
     emoji: "🛡️",
+    zalopay_url: "https://zalopay.vn/dich-vu/bao-hiem",
   },
   wallet: {
     id: "wallet",
