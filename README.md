@@ -61,7 +61,7 @@ Toàn bộ backend chạy trên **GreenNode AgentBase Runtime** (`runtime-s2-gen
 - **Chọn thành viên tranh luận**: user tự chọn ai trong 9 thành viên sẽ tham gia phán xét đề xuất
 - **Xem tranh luận linh hoạt**: chuyển đổi giữa "Từng người" (cinematic) và "Tất cả cùng lúc" (scrollable timeline)
 - **Phương án chi tiêu thông minh**: với đề xuất du lịch hoặc giải trí, AI tự động gợi ý phân bổ ngân sách theo hạng mục (vé, khách sạn, ăn uống...) kèm link đặt trực tiếp (Traveloka, CGV, Agoda...)
-- **Sửa thu nhập inline**: chỉnh thu nhập hàng tháng ngay trong sidebar mà không cần đăng xuất
+- **Hồ sơ tài chính inline**: chỉnh thu nhập, số dư tiền mặt, và số dư đầu tư ngay trong sidebar — không cần đăng xuất. Cảnh báo nếu số dư chưa điền (engine dùng để tính khả năng chi trả)
 - **Mẫu nhanh**: 5 template phổ biến + "Khác" để tự điền hoàn toàn
 
 ## Giá trị mang lại
