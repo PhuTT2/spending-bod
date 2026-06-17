@@ -31,9 +31,11 @@ User điền đề xuất (tên, số tiền, loại chi tiêu)
         ↓
 AI hỏi thêm bối cảnh tài chính (qua /api/chat/followup)
         ↓
-Engine đánh giá tài chính (health score, affordability, goal impact)
+User chọn thành viên Hội đồng tham gia tranh luận (mặc định: tất cả 9)
         ↓
-AI narration sinh ra cuộc tranh luận giữa 9 thành viên HĐQT
+Engine đánh giá tài chính (affordability, goal impact, risk level)
+        ↓
+AI narration sinh ra cuộc tranh luận giữa các thành viên được chọn
         ↓
 Phán quyết: Approve / Approve with conditions / Delay / Reject
         ↓
@@ -53,11 +55,19 @@ Toàn bộ backend chạy trên **GreenNode AgentBase Runtime** (`runtime-s2-gen
 
 ---
 
+## Tính năng nổi bật
+
+- **Wizard 2 bước**: điền đề xuất → AI hỏi bối cảnh → trình lên Hội đồng với context đầy đủ
+- **Chọn thành viên tranh luận**: user tự chọn ai trong 9 thành viên sẽ tham gia phán xét đề xuất
+- **Xem tranh luận linh hoạt**: chuyển đổi giữa "Từng người" (cinematic) và "Tất cả cùng lúc" (scrollable timeline)
+- **Sửa thu nhập inline**: chỉnh thu nhập hàng tháng ngay trong sidebar mà không cần đăng xuất
+- **Mẫu nhanh**: 5 template phổ biến + "Khác" để tự điền hoàn toàn
+
 ## Giá trị mang lại
 
 | Trước | Sau |
 |-------|-----|
-| Quyết định chi tiêu trong vài giây theo cảm xúc | Có quy trình 3 bước: điền → AI hỏi bối cảnh → hội đồng phán xét |
+| Quyết định chi tiêu trong vài giây theo cảm xúc | Quy trình có cấu trúc: điền → AI hỏi bối cảnh → hội đồng phán xét |
 | Không biết chi tiêu ảnh hưởng tới mục tiêu thế nào | Xem ngay tác động lên emergency fund, goal progress, liquidity |
 | Không có ai phản biện | 9 persona AI với quan điểm khác nhau tranh luận trước khi ra phán quyết |
 | Kỷ luật tài chính không đo được | Điểm kỷ luật tăng/giảm theo từng quyết định, lưu lịch sử |
