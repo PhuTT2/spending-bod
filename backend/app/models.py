@@ -207,6 +207,26 @@ class ProposalInput(BaseModel):
     selected_members: Optional[list[str]] = None
 
 
+class SmartTip(BaseModel):
+    item: str
+    amount: float
+    url: str
+    note: str
+
+
+class SmartTipsRequest(BaseModel):
+    proposal_name: str
+    amount: float
+    category: str  # "travel" | "entertainment"
+    intent_hint: Optional[str] = None
+
+
+class SmartTipsResponse(BaseModel):
+    savings_pct: int
+    savings_note: str
+    tips: list[SmartTip]
+
+
 class ReasonBullet(BaseModel):
     dimension: str
     summary: str

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { BOARD_MEMBERS, DebateResponse, MemberVote, UserAction } from "../types";
-import { ArrowRight, Check, Share2, ShieldAlert, Sparkles, RefreshCw, TrendingDown, TrendingUp } from "lucide-react";
+import { BOARD_MEMBERS, DebateResponse, MemberVote, SmartTip, SmartTipsResponse, UserAction } from "../types";
+import { ArrowRight, Check, ExternalLink, Share2, ShieldAlert, Sparkles, RefreshCw, TrendingDown, TrendingUp } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import VerdictCard from "./VerdictCard";
 
@@ -63,6 +63,8 @@ export default function BoardRoom({ proposalName, amount, debate, displayName, o
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isWhyOpen, setIsWhyOpen] = useState(false);
   const [showVerdictCard, setShowVerdictCard] = useState(false);
+  const [smartTips, setSmartTips] = useState<SmartTipsResponse | null>(null);
+  const [smartTipsLoading, setSmartTipsLoading] = useState(false);
 
   const formattedAmount = new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(amount);
   const steps = narration.debate_steps;
@@ -72,6 +74,24 @@ export default function BoardRoom({ proposalName, amount, debate, displayName, o
     if (currentStepIndex < steps.length - 1) setCurrentStepIndex((p) => p + 1);
     else setPhase("voting");
   };
+
+  const SMART_CATEGORIES = ["travel", "entertainment"];
+
+  useEffect(() => {
+    if (phase !== "resolution") return;
+    const cat = evaluation.product_recommendation.category;
+    if (!SMART_CATEGORIES.includes(cat)) return;
+    setSmartTipsLoading(true);
+    fetch("/api/proposals/smart-tips", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ proposal_name: proposalName, amount, category: cat }),
+    })
+      .then((r) => r.json())
+      .then((d: SmartTipsResponse) => setSmartTips(d))
+      .catch(() => {})
+      .finally(() => setSmartTipsLoading(false));
+  }, [phase]);
 
   useEffect(() => {
     if (phase !== "voting") return;
@@ -323,6 +343,64 @@ export default function BoardRoom({ proposalName, amount, debate, displayName, o
                 </a>
               </div>
             </div>
+
+            {/* Smart spending tips — travel & entertainment only */}
+            {(smartTipsLoading || smartTips) && (
+              <div className="bg-gradient-to-br from-violet-50 to-indigo-50 border-4 border-black rounded-3xl p-5 md:p-6 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
+                <div className="flex items-center justify-between pb-4 border-b-2 border-dashed border-black mb-5">
+                  <h4 className="font-black text-xs uppercase flex items-center gap-1.5">
+                    {evaluation.product_recommendation.category === "travel" ? "✈️" : "🍿"} Phương án chi tiêu thông minh nhất
+                  </h4>
+                  {smartTips && (
+                    <span className="px-3 py-1 bg-yellow-300 border-2 border-black rounded-full font-black text-[11px] uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                      Tiết kiệm {smartTips.savings_pct}%
+                    </span>
+                  )}
+                </div>
+
+                {smartTipsLoading && (
+                  <div className="flex items-center gap-3 py-4">
+                    <div className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin shrink-0" />
+                    <span className="text-xs font-bold text-slate-500">AI đang tìm phương án tối ưu...</span>
+                  </div>
+                )}
+
+                {smartTips && (
+                  <>
+                    <div className="space-y-3">
+                      {smartTips.tips.map((tip: SmartTip, idx: number) => (
+                        <div key={idx} className="flex items-center justify-between bg-white border-2 border-black rounded-2xl px-4 py-3 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                          <div className="min-w-0 flex-1 pr-3">
+                            <span className="font-black text-sm text-slate-900 block">{tip.item}</span>
+                            <span className="text-[10px] text-slate-500 font-semibold">{tip.note}</span>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="font-mono font-black text-xs text-emerald-700">
+                              {new Intl.NumberFormat("vi-VN").format(tip.amount)}₫
+                            </span>
+                            {tip.url && (
+                              <a
+                                href={tip.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-7 h-7 bg-indigo-600 hover:bg-yellow-300 border-2 border-black rounded-lg flex items-center justify-center transition-all"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5 text-white hover:text-black" />
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {smartTips.savings_note && (
+                      <p className="mt-4 text-[11px] font-bold text-indigo-700 bg-indigo-100 border border-indigo-300 rounded-xl px-3 py-2">
+                        💡 {smartTips.savings_note}
+                      </p>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
 
             {/* Collapsible: votes + simulation + goal impacts */}
             <div className="border-4 border-black rounded-3xl overflow-hidden bg-white">

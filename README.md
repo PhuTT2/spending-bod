@@ -60,6 +60,7 @@ Toàn bộ backend chạy trên **GreenNode AgentBase Runtime** (`runtime-s2-gen
 - **Wizard 2 bước**: điền đề xuất → AI hỏi bối cảnh → trình lên Hội đồng với context đầy đủ
 - **Chọn thành viên tranh luận**: user tự chọn ai trong 9 thành viên sẽ tham gia phán xét đề xuất
 - **Xem tranh luận linh hoạt**: chuyển đổi giữa "Từng người" (cinematic) và "Tất cả cùng lúc" (scrollable timeline)
+- **Phương án chi tiêu thông minh**: với đề xuất du lịch hoặc giải trí, AI tự động gợi ý phân bổ ngân sách theo hạng mục (vé, khách sạn, ăn uống...) kèm link đặt trực tiếp (Traveloka, CGV, Agoda...)
 - **Sửa thu nhập inline**: chỉnh thu nhập hàng tháng ngay trong sidebar mà không cần đăng xuất
 - **Mẫu nhanh**: 5 template phổ biến + "Khác" để tự điền hoàn toàn
 

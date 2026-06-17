@@ -127,6 +127,21 @@ export interface UserState {
   unlocked_badge_ids: string[];
 }
 
+// --- Smart tips ---------------------------------------------------------
+
+export interface SmartTip {
+  item: string;
+  amount: number;
+  url: string;
+  note: string;
+}
+
+export interface SmartTipsResponse {
+  savings_pct: number;
+  savings_note: string;
+  tips: SmartTip[];
+}
+
 // --- Proposal evaluation (engine output) --------------------------------
 
 export type FinancialIntent =
