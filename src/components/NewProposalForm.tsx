@@ -114,9 +114,16 @@ export default function NewProposalForm({ onSubmit, isLoading, prefill, submitLa
 
   const applyTemplate = (index: number, t: Template) => {
     setSelectedTemplate(index);
-    if (t.name) setProposalName(t.name);       // "Khác" has empty name — don't clear user's input
-    if (t.amount) setAmountInput(t.amount.toString());
-    if (t.context) setContext(t.context);
+    if (!t.name && !t.amount && !t.context) {
+      // "Khác" — clear everything so user fills from scratch
+      setProposalName("");
+      setAmountInput("");
+      setContext("");
+    } else {
+      if (t.name) setProposalName(t.name);
+      if (t.amount) setAmountInput(t.amount.toString());
+      if (t.context) setContext(t.context);
+    }
     setSelectedIntent(t.intent);
     setErrors({});
   };
