@@ -15,7 +15,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 
-type ProposalDraft = { proposal_name: string; amount: number; context: string; intent_hint?: string };
+type ProposalDraft = { proposal_name: string; amount: number; context: string; intent_hint?: string; selected_members?: string[] };
 type Tab = "proposals" | "boardroom" | "goals" | "history";
 
 const LOADING_MESSAGES = [

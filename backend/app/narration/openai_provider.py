@@ -19,8 +19,13 @@ def _format_vnd(amount: float) -> str:
     return f"{amount:,.0f}".replace(",", ".") + "đ"
 
 
-def _build_prompt(evaluation: EvaluationResult, proposal: ProposalInput, display_name: str) -> str:
+def _build_prompt(evaluation: EvaluationResult, proposal: ProposalInput, display_name: str, selected_members: list[str] | None = None) -> str:
     goal_impacts = [g.model_dump() for g in evaluation.goal_impacts]
+    all_members = "chairman, cxo, cho, clo, luck_director, cto, cgo, cro, wallet"
+    if selected_members and len(selected_members) > 0:
+        debate_instruction = f"- Sử dụng ĐÚNG các thành viên sau trong phần debate_steps (không thêm, không bớt): {', '.join(selected_members)}. Soạn {len(selected_members) + 1}-{len(selected_members) + 2} lượt tranh luận."
+    else:
+        debate_instruction = f"- Chọn 3-4 trong 9 thành viên ({all_members}) phù hợp nhất với bản chất tài chính ở trên để tranh luận. Soạn 4-5 lượt tranh luận (debate_steps)."
     return f"""Bạn là một hội đồng quản trị tài chính (Board of Directors) quản lý dòng tiền cá nhân của người dùng (CEO).
 Nhiệm vụ: thuật lại một cuộc tranh luận tấu hài bám sát đúng quyết định đã được Rule Engine tính toán sẵn — KHÔNG được tự đổi số liệu hay quyết định.
 
@@ -35,8 +40,8 @@ Dữ liệu từ Rule Engine (sự thật tuyệt đối, không được mâu t
 
 Hướng dẫn giọng văn: tiếng Việt tự nhiên, GenZ, châm chọc sắc sảo nhưng thiết thực, hài hước kiểu cú Duolingo.
 - Nếu có mục tiêu bị ảnh hưởng tiêu cực, phải nhắc tới nó để răn đe cụ thể.
-- Chọn 3-4 trong 8 thành viên (chairman, cxo, cho, clo, luck_director, cto, cgo, cro, wallet) phù hợp nhất với bản chất tài chính ở trên để tranh luận.
-- Soạn 4-5 lượt tranh luận (debate_steps), rồi toàn bộ 8 thành viên phải bỏ phiếu (votes) — vote chỉ được là "approve" hoặc "reject", không có giá trị khác.
+{debate_instruction}
+- Toàn bộ 9 thành viên ({all_members}) phải bỏ phiếu (votes) — vote chỉ được là "approve" hoặc "reject", không có giá trị khác.
 - Nếu quyết định là APPROVE/APPROVE_WITH_CONDITIONS thì đa số phiếu phải approve; ngược lại đa số phải reject.
 - conclusion.approved phải khớp với đa số phiếu và với quyết định của Rule Engine ở trên.
 
@@ -107,7 +112,7 @@ class OpenAIProvider(NarrationProvider):
         self._model = NARRATION_MODEL
 
     async def generate_board_narration(self, evaluation: EvaluationResult, proposal: ProposalInput, display_name: str) -> NarrationResult:
-        prompt = _build_prompt(evaluation, proposal, display_name)
+        prompt = _build_prompt(evaluation, proposal, display_name, proposal.selected_members)
         response = await self._client.chat.completions.create(
             model=self._model,
             messages=[{"role": "user", "content": prompt}],

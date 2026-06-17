@@ -58,6 +58,7 @@ export default function BoardRoom({ proposalName, amount, debate, displayName, o
   const { narration, evaluation } = debate;
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [phase, setPhase] = useState<"debate" | "voting" | "resolution">("debate");
+  const [viewMode, setViewMode] = useState<"sequential" | "all">("sequential");
   const [voteReveals, setVoteReveals] = useState<Record<string, boolean>>({});
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isWhyOpen, setIsWhyOpen] = useState(false);
@@ -106,17 +107,33 @@ export default function BoardRoom({ proposalName, amount, debate, displayName, o
           <p className="text-xs text-gray-500 font-bold">{formattedAmount}</p>
         </div>
         {phase === "debate" && (
-          <button
-            onClick={() => setPhase("voting")}
-            className="px-5 py-2.5 text-xs bg-indigo-600 hover:bg-yellow-300 text-white hover:text-black border-2 border-black font-black uppercase rounded-xl shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-y-0.5 transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
-          >
-            <span>Bỏ qua tranh luận</span> <ArrowRight className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="flex border-2 border-black rounded-xl overflow-hidden">
+              <button
+                onClick={() => setViewMode("sequential")}
+                className={`px-3 py-2 text-[11px] font-black uppercase cursor-pointer transition-all ${viewMode === "sequential" ? "bg-indigo-600 text-white" : "bg-white text-black hover:bg-slate-100"}`}
+              >
+                Từng người
+              </button>
+              <button
+                onClick={() => setViewMode("all")}
+                className={`px-3 py-2 text-[11px] font-black uppercase cursor-pointer transition-all border-l-2 border-black ${viewMode === "all" ? "bg-indigo-600 text-white" : "bg-white text-black hover:bg-slate-100"}`}
+              >
+                Tất cả
+              </button>
+            </div>
+            <button
+              onClick={() => setPhase("voting")}
+              className="px-4 py-2.5 text-xs bg-slate-100 hover:bg-yellow-300 text-black border-2 border-black font-black uppercase rounded-xl shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-y-0.5 transition-all flex items-center gap-1.5 cursor-pointer"
+            >
+              <span>Bỏ qua</span> <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
         )}
       </div>
 
       <div className={`relative bg-white border-4 border-black rounded-3xl p-5 md:p-8 flex flex-col justify-between mb-8 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] ${phase === "resolution" ? "" : "min-h-[420px]"}`}>
-        {phase === "debate" && activeStep && (
+        {phase === "debate" && activeStep && viewMode === "sequential" && (
           <div className="w-full h-full flex flex-col justify-between relative z-10">
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3.5 mb-6">
               {Object.values(BOARD_MEMBERS).map((member) => {
@@ -156,6 +173,39 @@ export default function BoardRoom({ proposalName, amount, debate, displayName, o
                 </div>
               </motion.div>
             </AnimatePresence>
+          </div>
+        )}
+
+        {phase === "debate" && viewMode === "all" && (
+          <div className="w-full flex flex-col gap-4 relative z-10">
+            <div className="overflow-y-auto max-h-[520px] space-y-4 pr-1">
+              {steps.map((step, idx) => {
+                const member = BOARD_MEMBERS[step.member_id];
+                const visual = MEMBER_STYLE[step.member_id] || { bg: "bg-slate-100", text: "text-black" };
+                return (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.06 }}
+                    className="p-4 md:p-5 rounded-2xl bg-white border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] relative"
+                  >
+                    <div className="absolute -top-3.5 left-5 flex items-center gap-1.5 px-3 py-1 rounded-full border-2 border-black text-xs font-black uppercase text-white" style={{}} >
+                      <span className={`flex items-center gap-1.5 px-3 py-1 rounded-full border-2 border-black text-xs font-black ${visual.bg} ${visual.text}`}>
+                        {member?.emoji} {member?.name || step.member_name}
+                      </span>
+                    </div>
+                    <p className="text-sm text-[#1E293B] font-extrabold italic leading-relaxed pt-3">&ldquo;{step.quote}&rdquo;</p>
+                  </motion.div>
+                );
+              })}
+            </div>
+            <button
+              onClick={() => setPhase("voting")}
+              className="w-full py-3.5 bg-indigo-600 hover:bg-yellow-300 hover:text-black text-white border-2 border-black rounded-2xl font-black uppercase transition cursor-pointer flex items-center justify-center gap-2 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+            >
+              Biểu quyết 🗳️ <ArrowRight className="w-4 h-4" />
+            </button>
           </div>
         )}
 

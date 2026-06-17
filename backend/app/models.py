@@ -203,6 +203,8 @@ class ProposalInput(BaseModel):
     # Explicit signal from the form. When present, the engine trusts it over
     # its own regex guess instead of silently overriding the user.
     intent_hint: Optional[str] = None
+    # Optional: user-selected member IDs to participate in the debate.
+    selected_members: Optional[list[str]] = None
 
 
 class ReasonBullet(BaseModel):

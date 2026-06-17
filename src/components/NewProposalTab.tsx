@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import NewProposalForm from "./NewProposalForm";
-import { FollowupResponse, FollowupQuestion } from "../types";
+import { FollowupResponse, FollowupQuestion, BOARD_MEMBERS } from "../types";
 import { ArrowRight, Sparkles } from "lucide-react";
+
+const ALL_MEMBER_IDS = Object.keys(BOARD_MEMBERS);
 
 type Phase = "form" | "ai-loading" | "ai-questions";
 
@@ -15,6 +17,7 @@ interface ProposalDraft {
   amount: number;
   context: string;
   intent_hint?: string;
+  selected_members?: string[];
 }
 
 interface NewProposalTabProps {
@@ -31,6 +34,17 @@ export default function NewProposalTab({ onSubmit, isLoading, prefill, displayNa
   const [followupData, setFollowupData] = useState<FollowupResponse | null>(null);
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [aiError, setAiError] = useState<string | null>(null);
+  const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>(ALL_MEMBER_IDS);
+
+  const toggleMember = (id: string) => {
+    setSelectedMemberIds((prev) => {
+      if (prev.includes(id)) {
+        if (prev.length <= 1) return prev; // keep at least 1 selected
+        return prev.filter((m) => m !== id);
+      }
+      return [...prev, id];
+    });
+  };
 
   const handleFormSubmit = async (proposal: ProposalDraft) => {
     setDraft(proposal);
@@ -77,12 +91,12 @@ export default function NewProposalTab({ onSubmit, isLoading, prefill, displayNa
       .filter(Boolean)
       .join(". ");
     const fullContext = [draft.context, aiContext].filter(Boolean).join(". ");
-    onSubmit({ ...draft, context: fullContext });
+    onSubmit({ ...draft, context: fullContext, selected_members: selectedMemberIds });
   };
 
   const handleSkipAi = () => {
     if (!draft) return;
-    onSubmit(draft);
+    onSubmit({ ...draft, selected_members: selectedMemberIds });
   };
 
   return (
@@ -174,7 +188,31 @@ export default function NewProposalTab({ onSubmit, isLoading, prefill, displayNa
               ))}
             </div>
 
-            <div className="flex gap-3 mt-6 pt-4 border-t-2 border-dashed border-slate-200">
+            {/* Member picker */}
+            <div className="mt-6 pt-4 border-t-2 border-dashed border-slate-200">
+              <p className="text-[10px] font-black uppercase text-slate-500 mb-2 tracking-widest">Thành viên tham gia tranh luận</p>
+              <div className="flex flex-wrap gap-2">
+                {ALL_MEMBER_IDS.map((id) => {
+                  const m = BOARD_MEMBERS[id];
+                  const selected = selectedMemberIds.includes(id);
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => toggleMember(id)}
+                      className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl border-2 border-black text-[11px] font-bold transition-all cursor-pointer ${
+                        selected ? "bg-indigo-600 text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]" : "bg-slate-100 text-slate-500 opacity-50"
+                      }`}
+                    >
+                      <span>{m.emoji}</span>
+                      <span>{m.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-4">
               <button
                 type="button"
                 onClick={() => { setPhase("form"); setFollowupData(null); setAnswers([]); }}
