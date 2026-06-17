@@ -114,9 +114,9 @@ export default function NewProposalForm({ onSubmit, isLoading, prefill, submitLa
 
   const applyTemplate = (index: number, t: Template) => {
     setSelectedTemplate(index);
-    setProposalName(t.name);
-    setAmountInput(t.amount ? t.amount.toString() : "");
-    setContext(t.context);
+    if (t.name) setProposalName(t.name);       // "Khác" has empty name — don't clear user's input
+    if (t.amount) setAmountInput(t.amount.toString());
+    if (t.context) setContext(t.context);
     setSelectedIntent(t.intent);
     setErrors({});
   };
@@ -154,7 +154,7 @@ export default function NewProposalForm({ onSubmit, isLoading, prefill, submitLa
               type="text"
               placeholder="Ví dụ: Mua MacBook Pro"
               value={proposalName}
-              onChange={(e) => { setProposalName(e.target.value); setSelectedTemplate(null); }}
+              onChange={(e) => setProposalName(e.target.value)}
               disabled={isLoading}
               className={`w-full px-3.5 py-2.5 bg-slate-50 border-2 ${errors.proposalName ? "border-rose-500" : "border-black"} rounded-xl text-black font-semibold text-xs outline-none focus:bg-white`}
             />
@@ -171,7 +171,7 @@ export default function NewProposalForm({ onSubmit, isLoading, prefill, submitLa
                 type="text"
                 placeholder="12.000.000"
                 value={formatCurrency(amountInput)}
-                onChange={(e) => { setAmountInput(e.target.value); setSelectedTemplate(null); }}
+                onChange={(e) => setAmountInput(e.target.value)}
                 disabled={isLoading}
                 className={`w-full px-3.5 py-2.5 bg-slate-50 border-2 ${errors.amountInput ? "border-rose-500" : "border-black"} rounded-xl font-mono font-black text-xs outline-none focus:bg-white pr-8`}
               />
@@ -207,7 +207,7 @@ export default function NewProposalForm({ onSubmit, isLoading, prefill, submitLa
             id="contextInput"
             placeholder="Vì sao bạn cần chi khoản này?"
             value={context}
-            onChange={(e) => { setContext(e.target.value); setSelectedTemplate(null); }}
+            onChange={(e) => setContext(e.target.value)}
             disabled={isLoading}
             rows={2}
             className="w-full px-3 py-2 bg-slate-50 border-2 border-black rounded-xl text-slate-800 font-semibold outline-none focus:bg-white text-xs leading-relaxed"
