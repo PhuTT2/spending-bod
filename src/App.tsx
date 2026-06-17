@@ -13,6 +13,8 @@ import {
   Target,
   History,
   ExternalLink,
+  Pencil,
+  Check,
 } from "lucide-react";
 
 type ProposalDraft = { proposal_name: string; amount: number; context: string; intent_hint?: string; selected_members?: string[] };
@@ -53,6 +55,8 @@ export default function App() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [proposalPrefill, setProposalPrefill] = useState<Partial<ProposalDraft> | null>(null);
+  const [editingIncome, setEditingIncome] = useState(false);
+  const [incomeInput, setIncomeInput] = useState("");
 
   useEffect(() => {
     fetchJSON<ProfileView>("/api/profile")
@@ -297,6 +301,58 @@ export default function App() {
         </div>
 
         <div className="w-full lg:w-80 shrink-0 flex flex-col gap-6">
+          {/* Income quick-edit card */}
+          <div className="bg-white border-4 border-black rounded-3xl p-5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-black">
+            <h4 className="font-black text-xs uppercase border-b-2 border-black pb-2 mb-3">💰 Hồ sơ tài chính</h4>
+            <div className="space-y-1">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Thu nhập hàng tháng</span>
+              {editingIncome ? (
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <input
+                      autoFocus
+                      type="text"
+                      value={new Intl.NumberFormat("vi-VN").format(parseInt(incomeInput.replace(/\D/g, ""), 10) || 0)}
+                      onChange={(e) => setIncomeInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          const val = parseInt(incomeInput.replace(/\D/g, ""), 10);
+                          if (val > 0) handleProfileSave({ ...profile, monthly_income: val });
+                          setEditingIncome(false);
+                        }
+                        if (e.key === "Escape") setEditingIncome(false);
+                      }}
+                      className="w-full px-3 py-2 bg-slate-50 border-2 border-indigo-500 rounded-xl font-mono font-black text-sm outline-none pr-6"
+                    />
+                    <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">₫</span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      const val = parseInt(incomeInput.replace(/\D/g, ""), 10);
+                      if (val > 0) handleProfileSave({ ...profile, monthly_income: val });
+                      setEditingIncome(false);
+                    }}
+                    className="w-8 h-8 bg-emerald-500 hover:bg-emerald-600 border-2 border-black rounded-lg flex items-center justify-center shrink-0 cursor-pointer"
+                  >
+                    <Check className="w-4 h-4 text-white" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between">
+                  <span className="font-mono font-black text-lg text-emerald-700">
+                    {new Intl.NumberFormat("vi-VN").format(profile.monthly_income)} ₫
+                  </span>
+                  <button
+                    onClick={() => { setIncomeInput(profile.monthly_income.toString()); setEditingIncome(true); }}
+                    className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-100 hover:bg-yellow-200 border-2 border-black rounded-lg text-[10px] font-black uppercase cursor-pointer transition-all"
+                  >
+                    <Pencil className="w-3 h-3" /> Sửa
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
           <div className="bg-white border-4 border-black rounded-3xl p-5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-black">
             <h4 className="font-black text-xs uppercase border-b-2 border-black pb-2 mb-3">🕴️ Thành viên Hội đồng quản trị</h4>
             <div className="space-y-3">
